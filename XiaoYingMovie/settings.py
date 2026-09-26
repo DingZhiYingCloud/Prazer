@@ -18,6 +18,12 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 # 非法值，浏览器直接忽略，等于这个设置根本没生效。
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
+# 反向代理（Nginx / IIS）终止 HTTPS 时，让 Django 依据 X-Forwarded-Proto 判定真实协议。
+# 不加这一条，线上 HTTPS 站点在 robots.txt 的 Sitemap 地址、页面的 canonical 与 og:url
+# 里都会输出 http://，搜索引擎会把两者当成不同 URL（见 README「部署教程」第 7 步）。
+# 前提：应用只监听回环地址，外部无法绕过反代直接伪造该请求头。
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 

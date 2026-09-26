@@ -363,7 +363,11 @@ def sitemap(request):
     urls = cache.get(SITEMAP_CACHE_KEY)
     if urls is None:
         urls = _build_sitemap_urls()
-        cache.set(SITEMAP_CACHE_KEY, urls, SITEMAP_CACHE_TTL)
+        # 取数失败时 _build_sitemap_urls() 返回的是空列表，此时**不写缓存**：
+        # 否则空站点地图会在整整一个 TTL（6 小时）内一直返回给搜索引擎。
+        # 原则与 API/apis/movie.py 的 _cached 一致：只缓存成功的结果。
+        if urls:
+            cache.set(SITEMAP_CACHE_KEY, urls, SITEMAP_CACHE_TTL)
     lines = ['<?xml version="1.0" encoding="UTF-8"?>',
              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for path, freq, priority in urls:
