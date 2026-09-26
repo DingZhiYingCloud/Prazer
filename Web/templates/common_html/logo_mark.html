@@ -1,0 +1,6 @@
+{# 站点 Logo（矢量图形绘制后导出，见 media/ 下的多尺寸产物） #}
+{# 设计：圆角方底 + 靛蓝→紫对角渐变，中间白色「屏幕框 + 播放三角」； #}
+{#       favicon.ico / apple-touch-icon.png 与 logo.png 同一套图形，各尺寸单独绘制所以小图标不发虚。 #}
+{# 用法：{% include 'common_html/logo_mark.html' with cls="h-9 w-9" %} #}
+<img src="/media/logo.png" alt="{{ SITE_NAME }}" title="{{ SITE_NAME }}"
+    class="{{ cls|default:'h-9 w-9' }} shrink-0 rounded-xl object-cover" />

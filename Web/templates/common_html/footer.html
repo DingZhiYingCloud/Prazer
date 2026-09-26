@@ -1,0 +1,51 @@
+<footer class="mt-10 border-t border-base-300 bg-base-200">
+    <div class="mx-auto w-full max-w-7xl px-4 py-10">
+        {% comment %}
+        页脚栅格：品牌块占两列（窄屏占满整行），频道入口与友情链接各一列。
+        break-words 是给友情链接兜底的：外部站名可能是长英文串，栏变窄后不打断会撑破栅格。
+        {% endcomment %}
+        <div class="grid grid-cols-2 gap-x-4 gap-y-8 break-words sm:gap-x-6 lg:grid-cols-4 lg:gap-8">
+
+            <div class="col-span-2 lg:col-span-2">
+                <div class="flex items-center gap-2">
+                    {% include 'common_html/logo_mark.html' with cls="h-8 w-8 shrink-0" %}
+                    <span class="text-lg font-bold">{{ SITE_NAME }}</span>
+                    <span class="badge badge-primary badge-sm">免费</span>
+                </div>
+                <p class="mt-3 max-w-md text-sm leading-relaxed opacity-70">
+                    {{ SITE_BRAND }}——免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，
+                    免注册、免登录，打开网页即可在线观看。
+                </p>
+                {# 联系方式：值全部来自 .env（见 Web/services/site_info.py），换联系方式不用动模板 #}
+                {% if SITE_CONTACT_WECHAT or SITE_CONTACT_TG or SITE_CONTACT_EMAIL %}
+                <ul class="mt-4 space-y-1 text-sm opacity-70">
+                    {% if SITE_CONTACT_WECHAT %}<li>微信：{{ SITE_CONTACT_WECHAT }}</li>{% endif %}
+                    {% if SITE_CONTACT_TG %}<li>Telegram：{{ SITE_CONTACT_TG }}</li>{% endif %}
+                    {% if SITE_CONTACT_EMAIL %}<li>邮箱：{{ SITE_CONTACT_EMAIL }}</li>{% endif %}
+                </ul>
+                {% endif %}
+            </div>
+
+            <nav>
+                <h2 class="footer-title mb-3 font-semibold opacity-60">频道入口</h2>
+                <ul class="space-y-2 text-sm">
+                    <li><a class="link link-hover" href="/">首页</a></li>
+                    {% for category in nav_categories %}
+                    <li><a class="link link-hover" href="/list/{{ category.id }}.html">{{ category.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </nav>
+
+            {% include 'common_html/friend_links.html' %}
+        </div>
+
+        <div class="mt-8 space-y-1 border-t border-base-300 pt-6 text-xs leading-relaxed opacity-60">
+            <p>郑重声明：本站为非商业的个人技术学习项目，不设会员、不插播广告；站内不存储、也不出售任何影片文件，
+                播放地址均由程序实时取自第三方公开来源，本站不对第三方内容的可用性与合法性负责。</p>
+            <p>免责声明：站内影片、海报等内容的著作权归原作者及版权方所有，本站仅供个人学习与交流使用，
+                请勿用于任何商业用途；喜欢请支持正版。</p>
+            <p>侵权处理：若本站收录的内容无意侵犯了你的权益，请来信告知 {{ SITE_CONTACT_EMAIL }}，我们会尽快核实并处理。</p>
+            <p class="pt-2">&copy; {% now "Y" %} {{ SITE_NAME }} · 本站不存储任何影片文件</p>
+        </div>
+    </div>
+</footer>

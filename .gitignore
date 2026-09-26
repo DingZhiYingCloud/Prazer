@@ -1,0 +1,58 @@
+*.egg-info
+*.idea
+*.
+
+
+build
+dist
+.pytest_cache
+__pycache__
+.vscode
+.venv
+*.apk
+
+# 环境文件
+.env
+.env.*
+
+# 敏感文件（实际敏感的配置）
+**/env.json
+
+# 日志文件
+*.log
+logs/
+
+# 缓存目录（Django FileBasedCache 运行产物）
+/cache/
+
+# Tailwind CSS 工具链：100MB+ 的 standalone 可执行文件不入库，
+# 需要重编译 output.css 时从 GitHub Releases 重新下载（命令见 input.css 顶部注释）
+Web/static-src/css/tailwindcss.exe
+
+# collectstatic 的收集目标（本项目静态文件直接从 Web/static 服务，不用 collectstatic）
+/staticfiles/
+
+# 数据库文件
+*.db
+*.sqlite3
+
+# 媒体文件:仅忽略 media/uploads/ 下的用户上传内容,允许提交 API/apis/uploads/ 代码目录
+/media/uploads/
+
+# 图片代理的本地缓存（第三方海报落地产物，运行时会重新生成）
+/media/pic/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 依赖文件
+node_modules/
+
+TuLianVenv/
+
+unpackage/
+
+migrations/
+
+Test/

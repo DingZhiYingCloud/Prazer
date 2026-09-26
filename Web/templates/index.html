@@ -1,0 +1,135 @@
+{% extends 'template.html' %}
+{% load xy_pic %}
+
+{% block title %}{{ SITE_NAME_ALT }} - {{ SITE_NAME }} - 免费在线影视{% endblock %}
+{% block og_title %}{{ SITE_NAME_ALT }} - {{ SITE_NAME }} - 免费在线影视{% endblock %}
+
+{% block head %}
+{% comment %}
+首屏主图就是 LCP 元素：提前 preload 并标 fetchpriority=high，
+别等 HTML 解析到它才开始下载（图片地址走本站代理，见 Web/views/pic.py）。
+{% endcomment %}
+{% if carousel %}
+<link rel="preload" as="image" href="{% pic carousel.0.cover %}" fetchpriority="high" />
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{# 首页数据来自小影电影「首页聚合」接口：轮播图 + 各推荐区块（见 Web/views/request.py 的 index） #}
+
+{% if carousel %}
+<section class="mx-auto w-full max-w-7xl px-4 pt-6">
+    <h1 class="sr-only">{{ SITE_NAME }} - 免费在线影视</h1>
+
+    {% comment %}
+    Hero：同一份 DOM 承载两种形态（形态见 input.css，交互见 static/js/hero.js）
+      ≥1024px —— 影院橱窗：左侧一张横版大图（16:9，与素材比例一致，几乎不裁切）
+                  + 右侧信息区；缩略图条独占整行放在两者下方（不再与图片重叠），
+                  四周留出内边距，当前位置的主色描边完整可见；
+      <1024px  —— 一屏一张的横滑图集：图片在上、文字在图下，滑动交给浏览器原生 scroll-snap；
+      无 JS —— 图集照样能滑、链接照样能点（首项文字为服务端直出）。
+
+    素材说明：轮播图接口给的是 16:9 横图，所以主图用横版框（竖版框会把画面裁掉一大半）。
+    {% endcomment %}
+    <div class="xy-hero" data-hero>
+        {# 氛围底图：当前海报的模糊版，只做背景烘托（移动端由 CSS 关掉） #}
+        <div class="xy-hero-backdrop" data-hero-backdrop aria-hidden="true"
+            style="background-image: url('{% pic carousel.0.cover %}')"></div>
+
+        <div class="xy-hero-grid">
+            {# PC 专用：左侧横版大图 #}
+            {% comment %}
+            两张图叠着放：切换时新图直接换上、旧图（is-prev 层）带着旋转缩放被抽走，
+            视觉上是"从牌堆里抽出最上面那张"（见 hero.js 的 slidePoster）
+            {% endcomment %}
+            <a class="xy-hero-poster" href="/detail/{{ carousel.0.id }}.html" data-hero-posterlink
+                title="{{ carousel.0.name }}">
+                <img class="xy-hero-poster-img is-prev" data-hero-posterprev alt="" aria-hidden="true" />
+                <img class="xy-hero-poster-img" src="{% pic carousel.0.cover %}" alt="{{ carousel.0.name }}"
+                    fetchpriority="high" data-hero-posterimg />
+            </a>
+
+            {# PC 专用：右侧信息区 #}
+            <div class="xy-hero-info" data-hero-info>
+                <span class="badge badge-primary badge-sm" data-hero-note>{{ carousel.0.note }}</span>
+                <h2 class="xy-hero-title">
+                    <a href="/detail/{{ carousel.0.id }}.html" data-hero-titlelink><span data-hero-title>{{ carousel.0.name }}</span></a>
+                </h2>
+                <p class="xy-hero-intro" data-hero-intro>{{ carousel.0.intro }}</p>
+                <div class="mt-5 flex flex-wrap items-center gap-3">
+                    <a href="/detail/{{ carousel.0.id }}.html" data-hero-cta class="btn btn-primary btn-sm sm:btn-md">立即观看</a>
+                    <span class="text-xs opacity-50">共 {{ carousel|length }} 部精选 · 点缩略图切换</span>
+                </div>
+            </div>
+
+            {# 图集 / 缩略图条：移动端一屏一张，PC 端整行缩略图 #}
+            <div class="xy-hero-track" data-hero-track>
+                {% for item in carousel %}
+                <a href="/detail/{{ item.id }}.html" class="xy-hero-slide" data-hero-slide data-name="{{ item.name }}"
+                    data-note="{{ item.note }}" data-intro="{{ item.intro }}" data-cover="{% pic item.cover %}"
+                    title="{{ item.name }}">
+                    <img src="{% pic item.cover %}" alt="{{ item.name }}"
+                        loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" />
+                    <span class="xy-hero-caption">
+                        <span class="badge badge-primary badge-sm">{{ item.note }}</span>
+                        <span class="mt-2 block line-clamp-1 text-base font-bold">{{ item.name }}</span>
+                        <span class="mt-1 block line-clamp-2 text-xs opacity-70">{{ item.intro }}</span>
+                    </span>
+                    {# 自动轮播进度条：只长在"当前这一格"的底边上（样式见 input.css 的 .xy-hero-timer） #}
+                    <span class="xy-hero-timer" aria-hidden="true"></span>
+                </a>
+                {% endfor %}
+            </div>
+
+            {% comment %}
+            控制条：移动端=圆点+箭头；PC=只有箭头（缩略图条本身就是导航）。
+            「n / 总数」两种形态都显示：PC 在箭头旁边，移动端在圆点旁边，切到第几张一眼可见。
+            {% endcomment %}
+            <div class="xy-hero-footer">
+                <div class="xy-hero-dots" data-hero-dots></div>
+                <span class="xy-hero-count" data-hero-count aria-hidden="true">1 / {{ carousel|length }}</span>
+                <button type="button" data-hero-prev class="btn btn-circle btn-sm btn-ghost" aria-label="上一个">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                </button>
+                <button type="button" data-hero-next class="btn btn-circle btn-sm btn-ghost" aria-label="下一个">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                        <path d="m9 18 6-6-6-6" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% comment %}
+区块卡片：胶片格样式（深色片框 + 齿孔 + 胶片编号），见 common_html/cards/film_strip.html。
+每个区块的 8 部影片全部展示，不截断数据。
+{% endcomment %}
+{% for block in blocks %}
+<section class="mx-auto w-full max-w-7xl px-4 pt-8">
+    <div class="mb-3 flex items-end justify-between gap-3">
+        <h2 class="flex items-center gap-2 text-lg font-bold sm:text-xl">
+            <span class="inline-block h-5 w-1.5 rounded-full bg-primary"></span>{{ block.title }}
+        </h2>
+        <span class="shrink-0 text-xs opacity-50">共 {{ block.items|length }} 部</span>
+    </div>
+
+    {% include 'common_html/cards/film_strip.html' with items=block.items %}
+</section>
+{% endfor %}
+
+{% if not carousel and not blocks %}
+<section class="mx-auto w-full max-w-7xl px-4 py-16">
+    <div class="alert"><span>影片数据暂时获取不到，请稍后刷新重试。</span></div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block js %}
+<script src="/static/js/hero.js?v=9" defer></script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{# 主导航菜单项（首页 + 频道）：侧边栏（PC 常驻 / 移动抽屉）唯一一份导航，带图标 #}
+{# 用法：套在自己的 <ul class="menu ..."> 里，{% include 'common_html/nav_menu.html' %} #}
+{% comment %}
+data-nav 必须写目标地址的**完整路径**：common.js 按整串比较来打高亮，
+写成 /list/1 这种前缀会让「电影(1)」在「福利(124)」页面里被一起点亮。
+
+（多行说明必须用 {% comment %} 包裹：Django 的 {# #} 注释只支持单行。）
+{% endcomment %}
+<li>
+    <a href="/" data-nav="/">
+        {% include 'common_html/nav_icon.html' with icon='home' %}
+        <span>首页</span>
+    </a>
+</li>
+{% for category in nav_categories %}
+<li>
+    <a href="/list/{{ category.id }}.html" data-nav="/list/{{ category.id }}.html">
+        {% include 'common_html/nav_icon.html' with icon=category.icon %}
+        <span>{{ category.name }}</span>
+    </a>
+</li>
+{% endfor %}

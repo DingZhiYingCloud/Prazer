@@ -1,0 +1,25 @@
+{% load xy_pic %}
+{# 首页区块卡片：「胶片格」—— 深色片框 + 上下齿孔 + 海报 + 两位胶片编号，影院质感 #}
+{# 齿孔与片框由 input.css 的 .xy-film-card 绘制；PC 四列、手机两列 #}
+{# 用法：{% include 'common_html/cards/film_strip.html' with items=block.items %} #}
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    {% for item in items %}
+    <a href="/detail/{{ item.id }}.html" title="{{ item.name }}" class="xy-film-card">
+        <span class="relative block overflow-hidden rounded-sm bg-base-200">
+            <img src="{% pic item.cover %}" alt="{{ item.name }}" loading="lazy"
+                class="aspect-[3/4] w-full object-cover" />
+            <span class="xy-card-hint">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6" aria-hidden="true">
+                    <path d="m5 3 14 9-14 9V3z" />
+                </svg>
+                <span class="text-xs font-medium">查看详情</span>
+            </span>
+        </span>
+        <span class="mt-2 flex items-baseline gap-1.5">
+            <span class="font-mono text-[11px] tabular-nums opacity-45">{{ forloop.counter|stringformat:"02d" }}</span>
+            <span class="line-clamp-1 text-sm font-medium">{{ item.name }}</span>
+        </span>
+    </a>
+    {% endfor %}
+</div>

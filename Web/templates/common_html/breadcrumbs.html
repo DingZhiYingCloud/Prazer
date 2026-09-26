@@ -1,0 +1,27 @@
+{% comment %}
+面包屑导航
+
+为什么不用 daisyUI 的 .breadcrumbs：它依赖 li 的 flex 布局来定位分隔符，
+一旦给 li/a 加上 line-clamp 之类的类（会把 display 改成 -webkit-box），
+分隔符与间距就会错位。这里自己控制结构，配合 truncate 稳定截断长片名。
+
+用法：视图传 breadcrumbs = [{'label': '首页', 'href': '/'}, {'label': '影片名'}]，
+      最后一项不传 href 表示当前位置（不可点、自动截断）。为空则不渲染。
+{% endcomment %}
+{% if breadcrumbs %}
+<nav class="flex items-center gap-1.5 overflow-hidden text-sm text-base-content/60" aria-label="面包屑导航">
+    {% for crumb in breadcrumbs %}
+    {% if not forloop.first %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0 opacity-40" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" />
+    </svg>
+    {% endif %}
+    {% if crumb.href %}
+    <a href="{{ crumb.href }}" class="link link-hover whitespace-nowrap">{{ crumb.label }}</a>
+    {% else %}
+    <span class="truncate" aria-current="page">{{ crumb.label }}</span>
+    {% endif %}
+    {% endfor %}
+</nav>
+{% endif %}

@@ -1,0 +1,7 @@
+lxml
+Django 
+requests 
+pycryptodome
+python-dotenv 
+Pillow
+waitress

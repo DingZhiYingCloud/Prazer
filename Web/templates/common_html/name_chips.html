@@ -1,0 +1,33 @@
+{% comment %}
+名字标签（含展开 / 收起）
+
+源站把导演/编剧/主演用 "/" 串成一串、结尾还多一个斜杠。这里改成小标签排版；
+超过 8 个时先显示前 8 个（preview），点「+N」展开为全部（rest），展开后 summary 变「收起」。
+展开/收起由纯 CSS 的 details[open] 状态驱动（见 input.css 的 .xy-chips 规则），不依赖 JS。
+
+参数：names —— 名字数组
+{% endcomment %}
+{% if names|length <= 8 %}
+<div class="flex flex-wrap items-center gap-1.5">
+    {% for name in names %}
+    <span class="badge badge-ghost badge-sm whitespace-nowrap">{{ name }}</span>
+    {% endfor %}
+</div>
+{% else %}
+<details class="xy-chips">
+    <summary class="badge badge-outline badge-sm cursor-pointer select-none whitespace-nowrap">
+        <span class="xy-chips-more">+{{ names|length|add:"-8" }}</span>
+        <span class="xy-chips-less">收起</span>
+    </summary>
+    <div class="xy-chips-preview mt-1.5 flex flex-wrap items-center gap-1.5">
+        {% for name in names|slice:":8" %}
+        <span class="badge badge-ghost badge-sm whitespace-nowrap">{{ name }}</span>
+        {% endfor %}
+    </div>
+    <div class="xy-chips-rest mt-1.5 flex flex-wrap items-center gap-1.5">
+        {% for name in names %}
+        <span class="badge badge-ghost badge-sm whitespace-nowrap">{{ name }}</span>
+        {% endfor %}
+    </div>
+</details>
+{% endif %}

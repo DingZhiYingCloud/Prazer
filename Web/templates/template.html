@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="renderer" content="webkit" />
+    <meta name="force-rendering" content="webkit" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <meta name="baidu-site-verification" content="codeva-D86XF7EVRs" />
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+    <title>{% block title %}{{ SITE_NAME_ALT }} - {{ SITE_NAME }} - 免费在线影视{% endblock %}</title>
+    <meta name="keywords"
+        content="{% block keywords %}{{ SITE_NAME }},{{ SITE_NAME_ALT }},免费影视,在线看电影,在线追剧,高清免费电影,电视剧在线观看,动漫在线看,综艺免费看{% endblock %}" />
+    <meta name="description"
+        content="{% block description %}{{ SITE_BRAND }}免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。{% endblock %}" />
+    <!-- 搜索引擎爬虫：默认允许收录；空数据页（接口失败/筛选页）在各自模板里覆盖为 noindex, follow -->
+    <meta name="robots" content="{% block robots %}index, follow{% endblock %}" />
+    {% comment %}
+    canonical 用 path 而不是 build_absolute_uri：后者会把 ?utm_source=xxx 之类的查询串带上，
+    同一个列表页就会因参数不同被搜索引擎当成多个不同地址。
+    {% endcomment %}
+    <link rel="canonical"
+        href="{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}" />
+    <link rel="icon" href="/media/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/media/apple-touch-icon.png" />
+    <!-- Open Graph：社交平台分享时生成卡片，各页面可覆盖 block 定制 -->
+    <meta property="og:site_name" content="{{ SITE_NAME }}" />
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
+    <meta property="og:title" content="{% block og_title %}{{ SITE_NAME_ALT }} - 免费在线影视{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}{{ SITE_BRAND }}免费在线影视站，免注册、免登录，打开网页即可在线观看。{% endblock %}" />
+    <meta property="og:url" content="{% block og_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}" />
+    {# 分享配图：默认用站点 Logo，详情页覆盖为该片海报（不设置的话微信/微博分享就是一张白卡） #}
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}/media/logo.png{% endblock %}" />
+    <meta property="og:locale" content="zh_CN" />
+    <!-- 结构化数据（schema.org）：声明站点信息与站内搜索，助力搜索引擎理解网站 -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "{{ SITE_NAME }}",
+        "url": "{{ request.scheme }}://{{ request.get_host }}/",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "{{ request.scheme }}://{{ request.get_host }}/so/{search_term_string}.html",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    {% comment %}
+    首屏脚本：必须在样式表之前执行 —— 只负责定主题（读本地记忆，没记忆就跟随系统），
+    避免深浅色首屏闪烁。页面加载不做任何入场/过渡动画（用户明确要求静态直出）。
+    {% endcomment %}
+    <script>
+        (function () {
+            var root = document.documentElement;
+            try {
+                var saved = localStorage.getItem('xy_theme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                root.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+            } catch (e) { /* 隐私模式等忽略 */ }
+        })();
+    </script>
+    <!-- 全站样式：output.css 由 input.css 编译产出（Tailwind CSS + daisyUI），模板新增类名后需重编译 -->
+    <link rel="stylesheet" href="/static/css/output.css?v={{ STATIC_VERSION }}" />
+    {# JS 也带版本号（与 output.css 同理），改动脚本后手动 +1，避免浏览器继续用缓存里的旧脚本 #}
+    <script src="/static/js/common.js?v=4" defer></script>
+
+    {% block head %}{% endblock %}
+</head>
+
+<body class="bg-base-100 text-base-content">
+    {% comment %}
+    全站布局用 daisyUI 抽屉：
+      ≥lg —— 左侧侧边栏常驻（drawer-open），分类导航不再占用顶部空间；
+      <lg —— 侧边栏收起，页头汉堡按钮拉出（同一份导航，只有一份 DOM）。
+    {% endcomment %}
+    <div class="drawer lg:drawer-open">
+        <input id="xy-drawer" type="checkbox" class="drawer-toggle" />
+
+        <div class="drawer-content flex min-h-screen flex-col">
+            {% include 'common_html/headers.html' %}
+            <main class="flex-1">{% block content %}{% endblock %}</main>
+            {% include 'common_html/footer.html' %}
+        </div>
+
+        {% include 'common_html/sidebar.html' %}
+    </div>
+
+    {% block js %}{% endblock %}
+</body>
+
+</html>

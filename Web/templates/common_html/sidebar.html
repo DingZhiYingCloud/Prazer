@@ -1,0 +1,36 @@
+{# 侧边栏：PC（≥lg）由 drawer-open 常驻显示，宽度随屏幅 18rem → 20rem；移动端由页头汉堡拉出 #}
+{# 全站只有这一份频道导航，避免 PC / 移动各维护一套 #}
+<div class="drawer-side z-50">
+    <label for="xy-drawer" aria-label="关闭菜单" class="drawer-overlay"></label>
+    <aside class="flex min-h-full w-72 flex-col border-r border-base-300 bg-base-100 xl:w-80">
+
+        {# 高度按「页头内容 4rem + 1px 下边框」对齐，两者底边成一条线 #}
+        <div class="flex h-[calc(4rem+1px)] shrink-0 items-center gap-2 border-b border-base-300 px-4">
+            <a href="/" class="flex min-w-0 items-center gap-2.5" title="{{ SITE_NAME }}">
+                {% include 'common_html/logo_mark.html' with cls="h-9 w-9" %}
+                <span class="truncate text-lg font-bold tracking-tight">{{ SITE_NAME }}</span>
+            </a>
+            <label for="xy-drawer" class="btn btn-ghost btn-circle btn-sm ml-auto lg:hidden" aria-label="关闭菜单">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </label>
+        </div>
+
+        <nav class="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="频道导航">
+            <p class="px-3 pb-2 text-xs font-semibold tracking-widest text-base-content/40">频道</p>
+            {# menu-lg 放大字号，xy-sidebar-menu 再把单项抬到 44px（见 input.css） #}
+            <ul class="menu menu-lg xy-sidebar-menu w-full gap-1 p-0">
+                {% include 'common_html/nav_menu.html' %}
+            </ul>
+        </nav>
+
+        <div class="shrink-0 border-t border-base-300 px-4 py-4 text-xs leading-relaxed text-base-content/50">
+            <p class="font-medium text-base-content/70">{{ SITE_BRAND }}</p>
+            <p class="mt-1">免注册、免登录，打开网页即可在线观看。</p>
+            {% if SITE_CONTACT_WECHAT %}<p class="mt-2">微信：{{ SITE_CONTACT_WECHAT }}</p>{% endif %}
+            {% if SITE_CONTACT_TG %}<p>Telegram：{{ SITE_CONTACT_TG }}</p>{% endif %}
+        </div>
+    </aside>
+</div>

@@ -1,0 +1,23 @@
+{% comment %}
+站内搜索框（页头用）
+
+daisyUI 的 input（label 包装输入框）自带边框/圆角/聚焦描边，右侧再放一个主色圆形提交按钮，
+比"细线框 + 无按钮"更像一个完整的搜索控件。提交由 common.js 的 bzSearch 处理。
+{% endcomment %}
+<form class="flex w-full items-center gap-2" autocomplete="off" onsubmit="return bzSearch(this);">
+    <label class="input input-sm w-full items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 opacity-50" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.2-3.2" />
+        </svg>
+        <input type="text" name="wd" class="grow" placeholder="搜索影片" autocomplete="off" maxlength="50" />
+    </label>
+    <button type="submit" class="btn btn-primary btn-circle btn-sm shrink-0" aria-label="搜索" title="搜索">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.2-3.2" />
+        </svg>
+    </button>
+</form>

@@ -1,0 +1,94 @@
+{% comment %}
+线路 + 选集面板（详情页与播放页共用，逻辑见 Web/static/js/player_picker.js）
+
+参数：
+  picker_mode  'browse' 详情页：线路是切换按钮，可逐条浏览各线路的选集（不跳转）
+               'play'   播放页：线路是链接，换源即跳到该线路第 1 集；只渲染当前线路的选集
+  vod_id       影片 ID
+  sources      播放源列表（每项含 sid / name / episodes）
+  current_sid  当前线路（browse 模式传第一条；play 模式传 URL 上的 sid）
+  current_nid  当前集数（仅 play 模式用，用于高亮与"上一集/下一集"起点）
+
+布局：≥lg 左侧竖排线路列表 + 右侧选集面板；<lg 线路变横向滚动条，选集在下方。
+集数超过 50 集时自动出现 1-50 / 51-100 这类分档按钮，并可一键正序/倒序。
+{% endcomment %}
+{% if sources %}
+<div class="mt-6 overflow-hidden rounded-box border border-base-300 bg-base-100"
+    data-picker data-vod-id="{{ vod_id }}"{% if picker_mode == 'play' %} data-episode-nav="1"{% endif %}>
+
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-base-300 px-4 py-3">
+        <h2 class="text-base font-semibold">播放源与选集</h2>
+        <p class="text-xs opacity-60">
+            {% if picker_mode == 'play' %}
+            切换线路将从该线路第 1 集开始播放
+            {% else %}
+            共 {{ sources|length }} 条线路，选择线路即可选集
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="flex flex-col lg:flex-row">
+
+        <div data-source-rail
+            class="flex shrink-0 gap-1 overflow-x-auto border-b border-base-300 p-2 lg:max-h-[24rem] lg:w-56 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:border-b-0 lg:border-r">
+            {% for source in sources %}
+            {% if picker_mode == 'play' %}
+            {# 播放页：换源 = 换一条流，必须重新加载播放器，所以做成链接最直白 #}
+            {% if source.episodes %}
+            <a href="/play/{{ vod_id }}/{{ source.sid }}/{{ source.episodes.0.nid }}.html"
+                class="btn btn-sm shrink-0 justify-between gap-2 lg:w-full {% if source.sid|stringformat:'s' == current_sid|stringformat:'s' %}btn-primary{% else %}btn-ghost{% endif %}"
+                title="{{ source.name }}">
+                <span class="max-w-40 truncate lg:max-w-none">{{ source.name|default:'线路' }}</span>
+                <span class="badge badge-xs">{{ source.episodes|length }}</span>
+            </a>
+            {% else %}
+            <button type="button" disabled
+                class="btn btn-sm shrink-0 justify-between gap-2 lg:w-full btn-ghost opacity-50" title="{{ source.name }}">
+                <span class="max-w-40 truncate lg:max-w-none">{{ source.name|default:'线路' }}</span>
+                <span class="badge badge-xs">0</span>
+            </button>
+            {% endif %}
+            {% else %}
+            <button type="button" data-source-btn="{{ source.sid }}" aria-pressed="false"
+                class="btn btn-sm shrink-0 justify-between gap-2 lg:w-full {% if source.sid|stringformat:'s' == current_sid|stringformat:'s' %}btn-primary{% else %}btn-ghost{% endif %}"
+                title="{{ source.name }}">
+                <span class="max-w-40 truncate lg:max-w-none">{{ source.name|default:'线路' }}</span>
+                <span class="badge badge-xs">{{ source.episodes|length }}</span>
+            </button>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="min-w-0 flex-1 p-3 sm:p-4">
+            {% for source in sources %}
+            {% if picker_mode == 'browse' or source.sid|stringformat:'s' == current_sid|stringformat:'s' %}
+            <div data-source-panel="{{ source.sid }}"
+                {% if source.sid|stringformat:'s' != current_sid|stringformat:'s' %}hidden{% endif %}>
+
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div data-range-btns class="flex flex-wrap gap-1"></div>
+                    <div class="flex items-center gap-1">
+                        {% if picker_mode == 'play' %}
+                        <a href="#" data-episode-prev class="btn btn-ghost btn-xs hidden">上一集</a>
+                        <a href="#" data-episode-next class="btn btn-primary btn-xs hidden">下一集</a>
+                        {% endif %}
+                        <button type="button" data-order-toggle class="btn btn-ghost btn-xs" title="切换正序/倒序">
+                            <span data-order-label>正序</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div data-episode-grid class="grid grid-cols-4 gap-1.5 sm:grid-cols-6 lg:grid-cols-8">
+                    {% for episode in source.episodes %}
+                    <a href="/play/{{ vod_id }}/{{ source.sid }}/{{ episode.nid }}.html"
+                        class="btn btn-xs {% if picker_mode == 'play' and source.sid|stringformat:'s' == current_sid|stringformat:'s' and episode.nid|stringformat:'s' == current_nid|stringformat:'s' %}btn-primary{% else %}btn-ghost{% endif %}"
+                        title="{{ episode.name|default:episode.nid }}">{{ episode.name|default:episode.nid }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

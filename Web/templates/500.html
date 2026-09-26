@@ -1,0 +1,18 @@
+{% extends 'template.html' %}
+
+{% block title %}服务器错误 - {{ SITE_NAME }}{% endblock %}
+{% block keywords %}500,服务器错误,{{ SITE_NAME }}{% endblock %}
+{% block description %}服务器开小差了，请稍后重试或返回首页继续浏览。{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<section class="mx-auto flex w-full max-w-3xl flex-col items-center px-4 py-20 text-center">
+    <p class="text-6xl font-black text-error/30">500</p>
+    <h1 class="mt-4 text-xl font-bold sm:text-2xl">抱歉，服务器开小差了</h1>
+    <p class="mt-2 text-sm opacity-60">服务器遇到一些问题，请稍后重试，或返回首页继续浏览。</p>
+    <div class="mt-6 flex gap-3">
+        <a href="/" class="btn btn-primary btn-sm">返回首页</a>
+        <a href="javascript:history.back();" class="btn btn-ghost btn-sm">返回上一页</a>
+    </div>
+</section>
+{% endblock %}

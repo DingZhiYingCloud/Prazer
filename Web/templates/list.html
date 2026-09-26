@@ -1,0 +1,92 @@
+{% extends 'template.html' %}
+
+{# 分页第 2 页起标题/描述带上页码：否则每页头尾一模一样的文案，容易被判成重复内容页 #}
+{% block title %}{{ type_name|default:'影视分类' }}{% if page > 1 %} - 第 {{ page }} 页{% endif %} - 免费在线观看 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}{{ type_name|default:'影视' }},免费在线观看,在线追剧,{{ SITE_NAME }}{% endblock %}
+{% block description %}{{ type_name|default:'影视分类' }}免费在线观看{% if page > 1 %}（第 {{ page }} 页）{% endif %}，{{ SITE_BRAND }}聚合最新影片资源，免注册、免登录，打开网页即可在线观看。{% endblock %}
+{% block og_title %}{{ type_name|default:'影视分类' }}{% if page > 1 %} - 第 {{ page }} 页{% endif %} - 免费在线观看{% endblock %}
+{# 空数据页（接口异常）与筛选组合页不收录：避免薄内容页与大量重复列表进入索引 #}
+{% block robots %}{% if empty or filtered %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+
+    <div class="mt-2 flex flex-wrap items-end justify-between gap-2">
+        <h1 class="text-2xl font-bold sm:text-3xl">{{ type_name|default:'影视分类' }}</h1>
+        <span class="text-sm opacity-60">共 {{ total_pages }} 页</span>
+    </div>
+
+    {% comment %}
+    筛选条：吸顶在页头正下方 —— 页头实测高 4rem + 1px 下边框，所以这里用 calc 精确对齐
+    （用 top-16 会与页头重叠 1px）。往下翻片时不用滚回去就能换排序/筛选。
+    排序最常用所以始终显示；地区/题材/语言/年份/子分类放进可折叠的「更多筛选」，
+    免得六行筛选把吸顶栏撑到半屏高。
+    选项与地址都由视图算好（见 Web/views/request.py 的 _build_filter_bar）：
+    每个选项只改自己那一项、其余条件保留，全是普通链接 —— 可分享、可后退，也不依赖 JS。
+    {% endcomment %}
+    <div class="xy-filter-bar sticky top-[calc(4rem+1px)] z-20 -mx-4 mt-3 space-y-2 border-b border-base-300 bg-base-100/95 px-4 py-3 backdrop-blur">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs opacity-50">排序</span>
+            <div class="join">
+                {% for link in order_links %}
+                <a href="{{ link.href }}"
+                    class="btn join-item btn-xs sm:btn-sm {% if link.active %}btn-primary{% else %}btn-ghost{% endif %}"
+                    {% if link.active %}aria-current="true"{% endif %}>{{ link.label }}</a>
+                {% endfor %}
+            </div>
+            {% if active_labels %}
+            <span class="text-xs opacity-60">已选：{{ active_labels|join:" · " }}</span>
+            {% endif %}
+            {% if filtered %}
+            <a href="/list/{{ type_id }}.html" class="btn btn-ghost btn-xs text-error sm:btn-sm">重置筛选</a>
+            {% endif %}
+        </div>
+
+        {% if filter_groups %}
+        <details class="xy-filter-more">
+            <summary class="btn btn-ghost btn-xs gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+                    <path d="M3 6h18M7 12h10M11 18h2" />
+                </svg>
+                更多筛选
+            </summary>
+            {# max-h + 可滚动：选项多的分类（连续剧题材有 50 项）也不会把面板撑到一整屏 #}
+            <div class="max-h-[55vh] space-y-2 overflow-y-auto pt-3">
+                {% for group in filter_groups %}
+                <div class="flex flex-wrap items-center gap-1">
+                    <span class="mr-1 w-12 shrink-0 text-xs opacity-50">{{ group.label }}</span>
+                    {% for option in group.options %}
+                    <a href="{{ option.href }}"
+                        class="btn btn-xs {% if option.active %}btn-primary{% else %}btn-ghost{% endif %}"
+                        {% if option.active %}aria-current="true"{% endif %}>{{ option.label }}</a>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </details>
+        {% endif %}
+    </div>
+
+    {% if items %}
+    <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        {% for item in items %}
+        {% include 'common_html/movie_card.html' with item=item %}
+        {% endfor %}
+    </div>
+    {% include 'common_html/pager.html' %}
+    {% else %}
+    <div class="mt-10 flex flex-col items-center gap-3 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12 opacity-30"
+            aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="3" />
+            <path d="M7 4v16M17 4v16" />
+        </svg>
+        <p class="text-sm opacity-60">这个条件下暂时没有影片。换个年份或排序看看，</p>
+        <a href="/list/{{ type_id }}.html" class="btn btn-primary btn-sm">查看全部{{ type_name|default:'影片' }}</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

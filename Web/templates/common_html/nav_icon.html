@@ -1,0 +1,31 @@
+{% comment %}
+频道图标：小影接口只给 id/name，图标在本站按 id 映射成 icon 键
+（映射表见 Web/services/movie_nav.py）。新增分类时在映射表补一行、这里补一个分支；
+未命中的走 grid 兜底。
+{% endcomment %}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+    stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0 opacity-70" aria-hidden="true">
+    {% if icon == 'home' %}
+    <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />
+    {% elif icon == 'film' %}
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M8 4v16M16 4v16M3 9.5h5M3 14.5h5M16 9.5h5M16 14.5h5" />
+    {% elif icon == 'tv' %}
+    <rect x="2" y="7" width="20" height="13" rx="2" />
+    <path d="m8 3 4 4 4-4" />
+    {% elif icon == 'star' %}
+    <path d="m12 3.5 2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.9l6-.9z" />
+    {% elif icon == 'sparkles' %}
+    <path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3" />
+    {% elif icon == 'gift' %}
+    <rect x="3" y="8" width="18" height="12" rx="2" />
+    <path d="M12 8v12M3 12.5h18M12 8c-1.7 0-3-1.1-3-2.4C9 4.4 9.8 3.5 11 3.5c1.6 0 1 4.5 1 4.5zM12 8c1.7 0 3-1.1 3-2.4 0-1.2-.8-2.1-2-2.1-1.6 0-1 4.5-1 4.5z" />
+    {% elif icon == 'flame' %}
+    <path d="M12 21.5c3.6 0 6-2.4 6-5.8 0-3.8-3-5.6-3-8.7 0 0-2 1.3-2 3.4 0-2-2-3.4-2-6-2 2.4-5 4.9-5 9.3 0 3.6 2.4 7.8 6 7.8z" />
+    {% else %}
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+    {% endif %}
+</svg>

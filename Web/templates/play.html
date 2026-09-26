@@ -1,0 +1,101 @@
+{% extends 'template.html' %}
+{% load xy_pic %}
+
+{% block title %}{{ name }} 在线播放 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}{{ name }},{{ name }}在线播放,{{ SITE_NAME }}{% endblock %}
+{% block description %}{{ name }}在线播放，{{ SITE_BRAND }}免注册、免登录，打开网页即可在线观看。{% endblock %}
+{% block og_title %}{{ name }} 在线播放{% endblock %}
+{% block og_type %}video.episode{% endblock %}
+{% block head %}
+{# 分享配图与播放器封面都用本站代理地址，和详情页保持一致 #}
+{% if cover %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% pic cover %}" />{% endif %}
+{# 播放器自带样式（公共部分在 template.html 里，这里只补播放器这一页要用的） #}
+<link rel="stylesheet" href="/static/js/vendor/xgplayer.min.css" />
+{% endblock %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-5xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+
+    <div class="mt-2 flex flex-wrap items-baseline justify-between gap-2">
+        <h1 class="line-clamp-1 text-lg font-bold sm:text-xl">{{ name }}</h1>
+        {# 手机端手势提示：只在窄屏显示（PC 上用不到手势，提示是噪音） #}
+        <p class="text-xs opacity-50 lg:hidden">左右滑动画面可调节进度</p>
+    </div>
+
+    {# 播放器容器：宽高由 CSS 的 aspect-video 定好，播放器自己往里填 #}
+    <div id="xy-player" class="mt-3 aspect-video w-full overflow-hidden rounded-box bg-black"></div>
+
+    <p id="xy-player-fail" class="mt-2 hidden text-sm text-error">
+        播放失败：该播放源可能已失效，或当前浏览器不支持该格式。请切换其它播放源，或更换 Chrome / Edge / Safari 浏览器。
+    </p>
+    {% if not m3u8 %}
+    <div class="alert mt-3"><span>播放地址暂时获取不到，请稍后重试或切换其它播放源。</span></div>
+    {% endif %}
+
+    {# 线路 + 选集：play 模式（线路是链接，换源即跳到该线路第 1 集，避免"线路亮着但画面还是旧的"） #}
+    {% include 'common_html/episode_picker.html' with picker_mode='play' current_sid=sid current_nid=nid %}
+</section>
+{% endblock %}
+
+{% block js %}
+{% pic cover as poster_src %}
+{% comment %}
+播放器：西瓜播放器（xgplayer，本地文件见 Web/static/js/vendor/）
+
+为什么换成它：手机端的"左右滑动调进度 + 时间预览、单击呼出控制栏、双击暂停、
+长按 2 倍速、上下滑动调亮度/音量"是它的内置能力（mobile 插件），
+自己用原生 video 写这些手势既费事又不如它稳。
+
+m3u8 引擎：只要 xgplayer-hls 插件在就挂上，由插件自己决定怎么解流
+（它内部会判断 MSE 等能力）。**不能用 canPlayType 判断"浏览器原生支持 HLS"** ——
+实测桌面 Chrome 对 'application/vnd.apple.mpegurl' 也返回 "maybe"，
+据此跳过插件会让 Firefox 这类不支持 HLS 的浏览器彻底播不了。
+{% endcomment %}
+<script src="/static/js/vendor/xgplayer.min.js"></script>
+<script src="/static/js/vendor/xgplayer-hls.min.js"></script>
+<script>
+    (function () {
+        var url = "{{ m3u8|escapejs }}";
+        var box = document.getElementById('xy-player');
+        var fail = document.getElementById('xy-player-fail');
+        if (!url || !box || !window.Player) return;
+
+        function showFail() { if (fail) fail.classList.remove('hidden'); }
+
+        var config = {
+            id: 'xy-player',
+            url: url,
+            poster: "{{ poster_src|escapejs }}",
+            lang: 'zh-cn',
+            width: '100%',
+            height: '100%',
+            autoplay: false,
+            playsinline: true,          // 手机端不全屏接管，页面内播放
+            volume: 0.8,
+            // 键盘快捷键（播放器自身）：←/→ 快退快进、空格暂停、M 静音、F 全屏
+            keyboard: { seekStep: 10 },
+            // 手机端手势（mobile 插件，仅移动端注册）。
+            // 上下滑动的默认方位沿用行业惯例：右半边上下滑动调音量、左半边调亮度。
+            mobile: {
+                gestureX: true,         // 左右滑动调进度 + 时间预览
+                gestureY: true,         // 右半边调音量、左半边调亮度
+                pressRate: 2,           // 长按 2 倍速
+                darkness: true,         // 左半边调暗（网页改不了系统亮度，用蒙层模拟）
+            },
+        };
+        if (window.HlsPlayer) {
+            config.plugins = [window.HlsPlayer];
+        } else if (!document.createElement('video').canPlayType('application/vnd.apple.mpegurl')) {
+            // 插件没加载成功，且浏览器也不支持 HLS：直接给出提示，不让访客对着黑屏等
+            showFail();
+        }
+
+        var player = new window.Player(config);
+        // 源站直链可能失效（403 / 网络不通），给出明确提示而不是让播放器静默空转
+        player.on('error', showFail);
+        window.xyPlayer = player;   // 挂到全局，方便排查播放问题
+    })();
+</script>
+<script src="/static/js/player_picker.js" defer></script>
+{% endblock %}

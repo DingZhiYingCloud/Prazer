@@ -1,0 +1,47 @@
+{% extends 'template.html' %}
+
+{% block title %}搜索「{{ keyword }}」 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}{{ keyword }},搜索{{ keyword }},{{ SITE_NAME }}{% endblock %}
+{% block description %}在{{ SITE_NAME }}搜索「{{ keyword }}」的相关影片，{{ SITE_BRAND }}免注册、免登录即可在线观看。{% endblock %}
+{% block og_title %}搜索「{{ keyword }}」{% endblock %}
+{# 无结果页不收录（薄内容页），有结果时正常收录 #}
+{% block robots %}{% if results %}index, follow{% else %}noindex, follow{% endif %}{% endblock %}
+
+{% block content %}
+{# 关键词交给 common.js 做片名高亮（见 static/js/common.js） #}
+<span data-hl-source="{{ keyword }}" hidden></span>
+
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+
+    <h1 class="mt-2 text-xl font-bold sm:text-2xl">搜索「{{ keyword }}」</h1>
+    <p class="mt-1 text-sm opacity-60">共找到 {{ results|length }} 个相关影片</p>
+
+    {% if results %}
+    <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        {% for item in results %}
+        {% include 'common_html/movie_card.html' with item=item %}
+        {% endfor %}
+    </div>
+    {% else %}
+    {# 空结果不把访客堵死：给分类入口继续逛 #}
+    <div class="mt-10 flex flex-col items-center gap-3 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12 opacity-30"
+            aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.2-3.2" />
+        </svg>
+        <p class="text-sm opacity-60">没有找到与「{{ keyword }}」相关的影片，换个关键词试试。</p>
+        {% if nav_categories %}
+        <div class="mt-1 flex flex-wrap justify-center gap-2">
+            {% for category in nav_categories %}
+            <a href="/list/{{ category.id }}.html" class="btn btn-ghost btn-sm">{{ category.name }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <a href="/" class="btn btn-primary btn-sm mt-1">返回首页</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

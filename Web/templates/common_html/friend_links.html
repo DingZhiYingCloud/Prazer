@@ -1,0 +1,14 @@
+{# 友情链接：由 context processor 注入（Web/services/friend_links.py），服务端渲染、搜索引擎可见 #}
+{% if friend_links %}
+<nav>
+    <h2 class="footer-title mb-3 font-semibold opacity-60">友情链接</h2>
+    <ul class="space-y-2 text-sm">
+        {% for link in friend_links %}
+        <li>
+            <a class="link link-hover" href="{{ link.url }}" title="{{ link.name }}"
+                target="_blank" rel="noopener nofollow">{{ link.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}

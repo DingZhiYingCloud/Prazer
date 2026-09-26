@@ -1,0 +1,33 @@
+{% load xy_pic %}
+{# 影片卡片：分类列表页 / 搜索结果页共用（首页区块用的是 common_html/cards/ 下的样式） #}
+{# 用法：{% include 'common_html/movie_card.html' with item=item %} #}
+{# 图片走本站代理（{% pic %} 标签），第三方站点的防盗链/限速/连不上都不会直接砸到访客 #}
+{# data-hl：搜索页会用 common.js 把片名里的关键词高亮（没有关键词时是空操作） #}
+{% comment %}
+用户明确要求：卡片本身不做任何悬停动效（不上浮、不缩放、不加阴影），
+鼠标经过只是盖一层"查看详情"提示（.xy-card-hint，纯显隐、无过渡）。
+
+注意：这里必须用 {% comment %} 而不是多行 {# … #} —— Django 的 {# #} 注释只支持单行，
+写成多行会当成普通文本原样输出，在 CSS Grid 里还会变成一个占位的匿名网格项。
+{% endcomment %}
+<a href="/detail/{{ item.id }}.html"
+    class="card block overflow-hidden border border-base-300 bg-base-100"
+    title="{{ item.name }}">
+    <figure class="relative aspect-[3/4] overflow-hidden bg-base-200">
+        <img src="{% pic item.cover %}" alt="{{ item.name }}" loading="lazy"
+            class="h-full w-full object-cover" />
+        <span class="xy-card-hint">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6" aria-hidden="true">
+                <path d="m5 3 14 9-14 9V3z" />
+            </svg>
+            <span class="text-xs font-medium">查看详情</span>
+        </span>
+    </figure>
+    <div class="p-2">
+        <h3 class="line-clamp-1 text-sm font-medium" data-hl>{{ item.name }}</h3>
+        <p class="mt-0.5 line-clamp-1 text-xs opacity-60">
+            {% if item.note %}{{ item.note }}{% else %}{{ item.category }}{% endif %}
+        </p>
+    </div>
+</a>
