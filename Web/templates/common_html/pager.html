@@ -1,11 +1,24 @@
-{# 分页器：全站列表页共用（依赖上下文 pagination.links，含 text / href / current）#}
+{% comment %}
+分页器：分类列表页 / 搜索页共用（依赖上下文 pagination.links，含 text / href / current）
+
+窄屏放不下全部页码：实测 390px 视口下 10 个按钮共 385px，而可用宽度只有 358px
+（视口 390 减去两侧各 16px 内边距）。.join 是 inline-flex 且不换行，撑出容器后
+连 justify-center 也失效（溢出时对齐到起始边），于是顶破页面、出现横向滚动条。
+
+这里两道处理：
+  1) 按钮用 btn-xs，窄屏更紧凑，多数情况直接放得下；
+  2) 外层加 overflow-x-auto 兜底 —— 极端情况（320px 窄屏、页码位数多）可横向滑动，
+     但绝不会再向外撑破文档宽度。
+{% endcomment %}
 {% if pagination.links %}
 <div class="mt-6 flex justify-center">
-    <div class="join">
-        {% for link in pagination.links %}
-        <a class="join-item btn btn-sm {% if link.current %}btn-primary{% elif not link.href %}btn-disabled{% else %}btn-ghost{% endif %}"
-            {% if link.href %}href="{{ link.href }}"{% endif %}>{{ link.text }}</a>
-        {% endfor %}
+    <div class="max-w-full overflow-x-auto">
+        <div class="join">
+            {% for link in pagination.links %}
+            <a class="join-item btn btn-xs sm:btn-sm {% if link.current %}btn-primary{% elif not link.href %}btn-disabled{% else %}btn-ghost{% endif %}"
+                {% if link.href %}href="{{ link.href }}"{% endif %}>{{ link.text }}</a>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endif %}

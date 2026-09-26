@@ -2,8 +2,11 @@
  * Tailwind CSS 4 + daisyUI 5 编译入口（源文件）
  * ------------------------------------------------------------
  * 编译命令（在项目根目录执行）：
- *   Web/static-src/css/tailwindcss.exe -i Web/static-src/css/input.css -o Web/static/css/output.css
+ *   Web/static-src/css/tailwindcss.exe -i Web/static-src/css/input.css -o Web/static/css/output.css --minify
  * 开发时加 --watch，改动模板类名后自动重编译。
+ *
+ * --minify 不能省：入库的 output.css 一直是压缩产物，漏掉它会把未压缩版本提交上去
+ * （实测体积 87KB → 118KB，且 diff 会膨胀成数千行，review 时看不清真正改了什么）。
  *
  * 为什么源文件不放在 Web/static/ 下：
  *   那个目录是**对外服务的静态目录**（/static/ 直接把它暴露给公网），
@@ -13,10 +16,11 @@
  * 注意：模板里新增 Tailwind/daisyUI 类名后必须重编译，output.css 才会包含新类名，
  *      表现就是"代码写了但样式没生效"（与 Django 的 autoreload 无关）。
  *
- * 设计取向（用户明确要求）：页面加载零动画、零入场效果、卡片零悬停动效 ——
- * 内容直接静态显示，不做任何"跳出来"的东西。
- * 唯一的例外是**首页轮播的切换**：用户后来要求"切换别太僵硬，加一点过渡"，
- * 于是只给切换本身加了短促的淡入淡出（0.18~0.34s），且海报走交叉淡入、不留空档。
+ * 设计取向（用户要求）：页面加载零入场动画、卡片零悬停动效 —— 内容直接静态显示，
+ * 不做任何"跳出来"的东西。允许的例外只有下面三处，都是为了消除"生硬感 / 无反馈"：
+ *   - 首页轮播切换：短促推拉 + 交叉淡入（0.18~0.56s）；
+ *   - 主题切换：0.28s 配色过渡（.xy-theme-fading，只在点击切换那一瞬间挂上）；
+ *   - 切换页面 / 提交搜索：顶部进度条（.xy-progress）。
  * ============================================================ */
 
 /* source(none) 关闭自动扫描。
@@ -539,12 +543,84 @@ a:focus-visible .xy-card-hint {
   bottom: 0.3rem;
 }
 
-/* ============ 列表页「更多筛选」折叠面板 ============
+/* ============ 列表页筛选栏 ============
+ * 版式：排序常驻、其余分组收进「更多筛选」，两者共用同一套「标签列 + 胶囊选项」网格。
+ * 为什么用 grid 而不是 flex-wrap：flex-wrap 下标签只跟第一行居中对齐，
+ * 选项一换行就跑到标签正下方、与上一行的选项错开（这正是原来"内容不对齐"的来源）；
+ * 两列网格让换行的选项自动缩进到选项列，标签与选项始终在同一条竖直线上。 */
+.xy-filter-group {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  gap: 0.25rem 0.75rem;
+  align-items: start;
+}
+
+.xy-filter-label {
+  /* 与右侧胶囊内文字的顶边对齐（胶囊 padding-top 为 4px） */
+  padding-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  opacity: 0.55;
+}
+
+.xy-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* 筛选项（排序与各分组共用）：选中态主色实心，未选中浅底 + 描边，
+   hover 只换描边与文字色、不改色块 —— 三种状态一眼能分开。 */
+.xy-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: 9999px;
+  background-color: var(--color-base-100);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  opacity: 0.8;
+}
+
+.xy-filter-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+.xy-filter-pill.is-active {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* 重置筛选：文字链，放在排序行末尾。比一个按钮更轻，不与胶囊抢注意力 */
+.xy-filter-reset {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.125rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  color: var(--color-error);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.85;
+}
+
+.xy-filter-reset:hover {
+  opacity: 1;
+}
+
+/* ============ 「更多筛选」折叠面板 ============
  * 用原生 <details> 实现：不依赖 JS，无 JS 也能展开；去掉系统三角标记，
- * 外观交给 daisyUI 的 btn 类。展开/收起不做过渡动画。 */
+ * 触发按钮外观交给 daisyUI 的 btn 类。展开/收起不做过渡动画。 */
 .xy-filter-more > summary {
   list-style: none;
-  width: fit-content;
   cursor: pointer;
 }
 
@@ -552,8 +628,30 @@ a:focus-visible .xy-card-hint {
   display: none;
 }
 
-.xy-filter-more[open] > summary {
+/* 展开时给触发按钮一个底色，明确"面板已打开" */
+.xy-filter-more[open] .xy-filter-toggle {
   background-color: var(--color-base-200);
+}
+
+/* 展开后的面板：独立成层（描边 + 底色 + 圆角），并与触发行留出明确间距，
+   不再糊在按钮下面 */
+.xy-filter-panel {
+  max-height: 55vh;
+  overflow-y: auto;
+  margin-top: 0.75rem;
+  padding: 0.25rem 0.75rem 0.5rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-box);
+  background-color: var(--color-base-200);
+}
+
+/* 面板内的分组：上下留白 + 组间虚线分隔，让「子分类 / 地区 / 题材 …」彼此分层 */
+.xy-filter-panel .xy-filter-group {
+  padding: 0.625rem 0;
+}
+
+.xy-filter-panel .xy-filter-group + .xy-filter-group {
+  border-top: 1px dashed var(--color-base-300);
 }
 
 /* 窄屏展开筛选面板时不再吸顶：手机屏本身就矮，500px 上下的吸顶面板会把可视区盖掉大半。
@@ -621,4 +719,75 @@ a:focus-visible .xy-card-hint {
   opacity: 1;
   transform: none;
   pointer-events: auto;
+}
+
+/* ============ 顶部进度条（由 common.js 创建） ============
+ * 切换页面 / 提交搜索时给出等待反馈。真进度拿不到，所以做成"先快后慢推进到 ~92%"，
+ * 新页面一渲染出来它就消失了。压在页头之上（页头是 z-30）。 */
+.xy-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: 0.1875rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.xy-progress.is-active {
+  opacity: 1;
+}
+
+.xy-progress-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background-image: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+}
+
+.xy-progress-fill.is-running {
+  animation: xy-progress-run 9s cubic-bezier(0.08, 0.72, 0.28, 1) forwards;
+}
+
+@keyframes xy-progress-run {
+  0% {
+    transform: scaleX(0);
+  }
+
+  35% {
+    transform: scaleX(0.55);
+  }
+
+  70% {
+    transform: scaleX(0.82);
+  }
+
+  100% {
+    transform: scaleX(0.92);
+  }
+}
+
+/* ============ 主题切换过渡 ============
+ * 只在用户主动切换主题的那一瞬间挂在 <html> 上（见 common.js），切完立即摘掉。
+ * 不做常驻过渡：首屏内联脚本也会改一次 data-theme，常驻会在加载时"闪一下过渡"。
+ * 覆盖 transition-delay，避免首页 Hero 信息区分条入场的错峰延迟在这里造成色块分批变色。 */
+.xy-theme-fading *,
+.xy-theme-fading *::before,
+.xy-theme-fading *::after {
+  transition: background-color 0.28s ease, border-color 0.28s ease,
+    color 0.28s ease, fill 0.28s ease, stroke 0.28s ease,
+    box-shadow 0.28s ease !important;
+  transition-delay: 0s !important;
+}
+
+/* 尊重系统「减少动态效果」：进度条不退化成静止的空条，而是直接显示到 92% 的位置 */
+@media (prefers-reduced-motion: reduce) {
+  .xy-progress-fill.is-running {
+    animation: none;
+    transform: scaleX(0.92);
+  }
 }

@@ -92,15 +92,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /* ============ 主题切换（浅色 / 深色） ============
  * 主题本身由 template.html 的首屏脚本决定（本地记忆 → 否则跟随系统），
- * 这里只负责点击切换 + 记忆 + 更新浏览器地址栏配色。
+ * 这里只负责点击切换 + 记忆 + 过渡。
  * 图标由 CSS 按 [data-theme] 显示（见 input.css）。
+ *
+ * 过渡：daisyUI 的主题是一堆 CSS 变量，直接切换会"啪"地一下整页变色。
+ * 这里在切换的瞬间给 <html> 临时挂 .xy-theme-fading，让配色类属性走 0.28s 过渡，
+ * 过渡结束立刻摘掉 —— 不常驻，避免影响卡片悬停等其它交互，
+ * 也保证首屏（内联脚本定主题那一次）不会"闪一下过渡"。
  */
 document.addEventListener('DOMContentLoaded', function () {
     var btn = document.querySelector('[data-theme-toggle]');
     if (!btn) return;
+    var fadeTimer = null;
     btn.addEventListener('click', function () {
         var root = document.documentElement;
         var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduceMotion) {
+            root.classList.add('xy-theme-fading');
+            if (fadeTimer) window.clearTimeout(fadeTimer);
+            fadeTimer = window.setTimeout(function () {
+                root.classList.remove('xy-theme-fading');
+                fadeTimer = null;
+            }, 320);
+        }
         root.setAttribute('data-theme', next);
         try { localStorage.setItem('xy_theme', next); } catch (e) { /* 隐私模式忽略 */ }
     });
@@ -146,3 +161,66 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('scroll', update, { passive: true });
     update();
 });
+
+/* ============ 顶部进度条：切换页面 / 提交搜索时的等待反馈 ============
+ * 服务端渲染站点，点链接后要等新文档返回，这段时间页面毫无反馈。
+ * 这里在点链接 / 提交表单时拉出顶部进度条，新页面一渲染出来它就没了。
+ * 真进度拿不到，所以是"先快后慢推进到 ~92%"的假进度（见 input.css 的动画）。
+ *
+ * 只做等待反馈，绝不拦截导航：所有判断不通过的情况一律直接放行。
+ */
+(function () {
+    var bar = document.createElement('div');
+    bar.className = 'xy-progress';
+    bar.setAttribute('aria-hidden', 'true');
+    bar.innerHTML = '<i class="xy-progress-fill"></i>';
+    document.body.appendChild(bar);
+    var fill = bar.firstChild;
+    var running = false;
+    var guard = null;
+
+    function start() {
+        if (running) return;
+        running = true;
+        bar.classList.add('is-active');
+        fill.classList.add('is-running');
+        // 兜底：点了链接但导航没发生（被脚本拦掉、或浏览器放弃跳转）时别一直挂着
+        if (guard) window.clearTimeout(guard);
+        guard = window.setTimeout(stop, 20000);
+    }
+
+    function stop() {
+        if (guard) {
+            window.clearTimeout(guard);
+            guard = null;
+        }
+        if (!running) return;
+        running = false;
+        bar.classList.remove('is-active');
+        fill.classList.remove('is-running');
+    }
+
+    document.addEventListener('click', function (e) {
+        // 只认"普通左键点击链接"：组合键、中键、_blank、下载、锚点
+        // 以及 javascript:/mailto:/tel: 都不会发起整页导航，一律不显示
+        if (e.defaultPrevented || e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var link = e.target.closest && e.target.closest('a');
+        if (!link) return;
+        if (link.target === '_blank' || link.hasAttribute('download')) return;
+        var href = link.getAttribute('href') || '';
+        if (!href || href.charAt(0) === '#') return;
+        if (/^(javascript|mailto|tel):/i.test(href)) return;
+        start();
+    }, true);
+
+    document.addEventListener('submit', function (e) {
+        if (e.defaultPrevented) return;
+        start();
+    }, true);
+
+    // 浏览器后退/前进命中 bfcache 时，把可能残留的进度条收掉
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) stop();
+    });
+})();

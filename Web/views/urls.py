@@ -15,5 +15,9 @@ urlpatterns = [
     path('play/<str:vod_id>/<str:sid>/<str:nid>.html', request.play, name='movie_play'),
     # 搜索：关键词可能带斜杠（如 "AC/DC"），WSGI 会把 %2F 解码成 /，
     # <str:keyword> 默认不匹配斜杠，所以用非贪婪的 .+? 兜住。
+    #
+    # 下面这条「带页码」的规则必须排在前面的不带页码规则之前：
+    # 否则 /so/爱情/2.html 会被 .+? 连页码一起吃进关键词（变成搜 "爱情/2"）。
+    re_path(r'^so/(?P<keyword>.+?)/(?P<page>\d+)\.html$', request.search, name='search_page'),
     re_path(r'^so/(?P<keyword>.+?)\.html$', request.search, name='search'),
 ]

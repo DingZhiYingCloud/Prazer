@@ -285,19 +285,43 @@ def play(request, vod_id, sid, nid):
     })
 
 
-def search(request, keyword):
-    """搜索页：按关键词搜影片（接口不分页，一次返回全部结果）
+def search(request, keyword, page=1):
+    """搜索页：按关键词搜影片，带分页（接口每页 18 条，pagination.total 是总页数）
 
     空关键词（有人手敲 /so/%20%20.html 这类地址）直接退回首页，
     留着只会渲染出一个空壳页，对用户和搜索引擎都是垃圾页。
+
+    第 1 页统一收敛到 /so/<关键词>.html（与列表页同一套处理），
+    避免 /1.html 与不带页码的地址被搜索引擎当成两个页面重复收录。
     """
     keyword = (keyword or '').strip()
     if not keyword:
         return redirect('home')
-    data = movie.get_search(keyword) or {}
+    # 路由用的是 re_path，page 拿到的是字符串（列表页那边走 <int:page> 才天然是 int）
+    page = max(1, int(page))
+    if page == 1 and request.path.endswith('/1.html'):
+        query = request.META.get('QUERY_STRING', '')
+        return redirect(f'/so/{quote(keyword)}.html' + (f'?{query}' if query else ''), permanent=True)
+
+    data = movie.get_search(keyword, page=page) or {}
+    meta = data.get('pagination') or {}
+    try:
+        total_pages = max(1, int(meta.get('total') or 1))
+    except (TypeError, ValueError):
+        total_pages = 1
+
+    def page_url(target):
+        """搜索分页地址：第 1 页回到不带页码的干净地址（与列表页一致）"""
+        target = min(max(1, int(target)), total_pages)
+        path = f'/so/{quote(keyword)}.html'
+        return path if target == 1 else f'/so/{quote(keyword)}/{target}.html'
+
     return render(request, 'search.html', {
         'keyword': keyword,
+        'page': page,
         'results': data.get('results') or [],
+        'total_pages': total_pages,
+        'pagination': {'links': pager.build(page, total_pages, page_url)},
         'breadcrumbs': [{'label': '首页', 'href': '/'}, {'label': '搜索'}],
     })
 

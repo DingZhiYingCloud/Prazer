@@ -1,9 +1,10 @@
 {% extends 'template.html' %}
 
-{% block title %}搜索「{{ keyword }}」 - {{ SITE_NAME_ALT }}{% endblock %}
+{# 分页第 2 页起标题/描述带页码：与列表页同理，避免每页头尾文案完全一样被判成重复内容页 #}
+{% block title %}搜索「{{ keyword }}」{% if page > 1 %} - 第 {{ page }} 页{% endif %} - {{ SITE_NAME_ALT }}{% endblock %}
 {% block keywords %}{{ keyword }},搜索{{ keyword }},{{ SITE_NAME }}{% endblock %}
-{% block description %}在{{ SITE_NAME }}搜索「{{ keyword }}」的相关影片，{{ SITE_BRAND }}免注册、免登录即可在线观看。{% endblock %}
-{% block og_title %}搜索「{{ keyword }}」{% endblock %}
+{% block description %}在{{ SITE_NAME }}搜索「{{ keyword }}」的相关影片{% if page > 1 %}（第 {{ page }} 页）{% endif %}，{{ SITE_BRAND }}免注册、免登录即可在线观看。{% endblock %}
+{% block og_title %}搜索「{{ keyword }}」{% if page > 1 %} - 第 {{ page }} 页{% endif %}{% endblock %}
 {# 无结果页不收录（薄内容页），有结果时正常收录 #}
 {% block robots %}{% if results %}index, follow{% else %}noindex, follow{% endif %}{% endblock %}
 
@@ -15,7 +16,11 @@
     {% include 'common_html/breadcrumbs.html' %}
 
     <h1 class="mt-2 text-xl font-bold sm:text-2xl">搜索「{{ keyword }}」</h1>
-    <p class="mt-1 text-sm opacity-60">共找到 {{ results|length }} 个相关影片</p>
+    {% comment %}
+    接口只返回总页数（pagination.total），没有结果总条数，所以多页时只说页数。
+    不能拿 results|length 冒充总数 —— 那只是当前这一页的条数。
+    {% endcomment %}
+    <p class="mt-1 text-sm opacity-60">{% if total_pages > 1 %}共 {{ total_pages }} 页，当前第 {{ page }} 页{% else %}共找到 {{ results|length }} 个相关影片{% endif %}</p>
 
     {% if results %}
     <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
@@ -23,6 +28,7 @@
         {% include 'common_html/movie_card.html' with item=item %}
         {% endfor %}
     </div>
+    {% include 'common_html/pager.html' %}
     {% else %}
     {# 空结果不把访客堵死：给分类入口继续逛 #}
     <div class="mt-10 flex flex-col items-center gap-3 text-center">

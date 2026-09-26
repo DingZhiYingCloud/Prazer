@@ -13,7 +13,11 @@ daisyUI 的 input（label 包装输入框）自带边框/圆角/聚焦描边，�
         </svg>
         <input type="text" name="wd" class="grow" placeholder="搜索影片" autocomplete="off" maxlength="50" />
     </label>
-    <button type="submit" class="btn btn-primary btn-circle btn-sm shrink-0" aria-label="搜索" title="搜索">
+{% comment %}
+提交按钮在手机（窄于 sm）隐藏：窄屏让输入框独占宽度，按键盘回车即可提交
+（表单的 onsubmit 已处理，回车与点按钮等价）。从 sm 起恢复显示。
+{% endcomment %}
+    <button type="submit" class="btn btn-primary btn-circle btn-sm hidden shrink-0 sm:inline-flex" aria-label="搜索" title="搜索">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />

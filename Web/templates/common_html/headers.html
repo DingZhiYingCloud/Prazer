@@ -9,7 +9,12 @@
             </svg>
         </label>
 
-        <a href="/" class="flex shrink-0 items-center gap-2 lg:hidden" title="{{ SITE_NAME }}">
+        {% comment %}
+        logo：手机（窄于 sm）不显示 —— 那里站点名文字本来就隐藏，只剩一个孤零零的图标；
+        从 sm 起显示图标，并带上站点名（见下面的 span）。
+        注意：这里必须用 {% comment %} 包裹，Django 的 {# #} 只支持单行。
+        {% endcomment %}
+        <a href="/" class="hidden shrink-0 items-center gap-2 sm:flex lg:hidden" title="{{ SITE_NAME }}">
             {% include 'common_html/logo_mark.html' with cls="h-7 w-7" %}
             <span class="hidden text-base font-bold tracking-tight sm:inline">{{ SITE_NAME }}</span>
         </a>

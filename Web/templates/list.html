@@ -20,48 +20,58 @@
     {% comment %}
     筛选条：吸顶在页头正下方 —— 页头实测高 4rem + 1px 下边框，所以这里用 calc 精确对齐
     （用 top-16 会与页头重叠 1px）。往下翻片时不用滚回去就能换排序/筛选。
-    排序最常用所以始终显示；地区/题材/语言/年份/子分类放进可折叠的「更多筛选」，
-    免得六行筛选把吸顶栏撑到半屏高。
+
+    版式为「标签列 + 胶囊选项」两列网格（见 input.css 的 .xy-filter-group / .xy-filter-pill）：
+    排序常驻显示，地区/题材/语言/年份/子分类收进「更多筛选」。用网格而不是 flex-wrap
+    是为了让标签与选项始终在同一条竖直线上，选项换行时缩进到选项列而不是跑到标签下面。
+
+    「更多筛选」在已有筛选条件生效时默认展开（active_labels 非空 = 折叠区里有条件生效）——
+    否则用户点完一个筛选跳到新页面，想接着筛还得再点一次才能展开。
+
     选项与地址都由视图算好（见 Web/views/request.py 的 _build_filter_bar）：
     每个选项只改自己那一项、其余条件保留，全是普通链接 —— 可分享、可后退，也不依赖 JS。
     {% endcomment %}
-    <div class="xy-filter-bar sticky top-[calc(4rem+1px)] z-20 -mx-4 mt-3 space-y-2 border-b border-base-300 bg-base-100/95 px-4 py-3 backdrop-blur">
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs opacity-50">排序</span>
-            <div class="join">
+    <div class="xy-filter-bar sticky top-[calc(4rem+1px)] z-20 -mx-4 mt-3 border-b border-base-300 bg-base-100/95 px-4 py-3 backdrop-blur">
+        <div class="xy-filter-group">
+            <span class="xy-filter-label">排序</span>
+            <div class="xy-filter-options">
                 {% for link in order_links %}
-                <a href="{{ link.href }}"
-                    class="btn join-item btn-xs sm:btn-sm {% if link.active %}btn-primary{% else %}btn-ghost{% endif %}"
+                <a href="{{ link.href }}" class="xy-filter-pill {% if link.active %}is-active{% endif %}"
                     {% if link.active %}aria-current="true"{% endif %}>{{ link.label }}</a>
                 {% endfor %}
+                {% if filtered %}
+                <a href="/list/{{ type_id }}.html" class="xy-filter-reset">重置筛选</a>
+                {% endif %}
             </div>
-            {% if active_labels %}
-            <span class="text-xs opacity-60">已选：{{ active_labels|join:" · " }}</span>
-            {% endif %}
-            {% if filtered %}
-            <a href="/list/{{ type_id }}.html" class="btn btn-ghost btn-xs text-error sm:btn-sm">重置筛选</a>
-            {% endif %}
         </div>
 
         {% if filter_groups %}
-        <details class="xy-filter-more">
-            <summary class="btn btn-ghost btn-xs gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
-                    <path d="M3 6h18M7 12h10M11 18h2" />
-                </svg>
-                更多筛选
+        <details class="xy-filter-more" {% if active_labels %}open{% endif %}>
+            <summary class="flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-2.5">
+                <span class="xy-filter-toggle btn btn-ghost btn-xs gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+                        <path d="M3 6h18M7 12h10M11 18h2" />
+                    </svg>
+                    更多筛选
+                    {% if active_labels %}<span class="badge badge-primary badge-xs">{{ active_labels|length }}</span>{% endif %}
+                </span>
+                {% if active_labels %}
+                <span class="text-xs opacity-60">已选：{{ active_labels|join:" · " }}</span>
+                {% endif %}
             </summary>
+
             {# max-h + 可滚动：选项多的分类（连续剧题材有 50 项）也不会把面板撑到一整屏 #}
-            <div class="max-h-[55vh] space-y-2 overflow-y-auto pt-3">
+            <div class="xy-filter-panel">
                 {% for group in filter_groups %}
-                <div class="flex flex-wrap items-center gap-1">
-                    <span class="mr-1 w-12 shrink-0 text-xs opacity-50">{{ group.label }}</span>
-                    {% for option in group.options %}
-                    <a href="{{ option.href }}"
-                        class="btn btn-xs {% if option.active %}btn-primary{% else %}btn-ghost{% endif %}"
-                        {% if option.active %}aria-current="true"{% endif %}>{{ option.label }}</a>
-                    {% endfor %}
+                <div class="xy-filter-group">
+                    <span class="xy-filter-label">{{ group.label }}</span>
+                    <div class="xy-filter-options">
+                        {% for option in group.options %}
+                        <a href="{{ option.href }}" class="xy-filter-pill {% if option.active %}is-active{% endif %}"
+                            {% if option.active %}aria-current="true"{% endif %}>{{ option.label }}</a>
+                        {% endfor %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>

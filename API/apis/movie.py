@@ -214,11 +214,19 @@ def get_play(vod_id, sid, nid):
     )
 
 
-def get_search(keyword):
-    """按关键词搜索影片，返回 data（含 results 影片列表）"""
+def get_search(keyword, page=1):
+    """按关键词搜索影片，返回 data（含 results 影片列表与 pagination 总页数）
+
+    :param page: 页码，从 1 开始
+
+    返回的 data 形如：
+        {'keyword': ..., 'page': 1, 'results': [...],
+         'pagination': {'current': 1, 'total': 56}}
+    注意 pagination.total 是**总页数**（与列表接口同口径），不是结果条数。
+    """
     return _cached(
-        f'{CACHE_PREFIX}:search:{keyword}',
+        f'{CACHE_PREFIX}:search:{keyword}:{page}',
         settings.XIAOYING_MOVIE_SEARCH_CACHE_TTL,
         f'{LINE_PATH}/search',
-        {'keyword': keyword},
+        {'keyword': keyword, 'page': page},
     )
