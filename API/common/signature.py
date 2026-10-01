@@ -84,3 +84,24 @@ def signed_get(path, params=None, timeout=REQUEST_TIMEOUT):
     )
     resp.raise_for_status()
     return resp.json() or {}
+
+
+def signed_post(path, params=None, timeout=REQUEST_TIMEOUT):
+    """带签名的 POST 请求，返回解析后的 JSON（是否成功由调用方判 code）
+
+    **同一份参数同时放在 query string 和请求体里**。这是实测结论，不是保守写法：
+    海角线路下不同接口读参数的位置并不一致 ——
+        /api/haijiao/register/captcha  只认 query string（放表单体返回 20001 参数缺失）
+        /api/haijiao/login             只认表单体（放 query 返回 20001 参数缺失）
+    两边都放、值完全一致，签名无论按哪一边校验都能对上，接口也不用一个一个去试。
+    """
+    signed = auth_params(params or {})
+    resp = requests.post(
+        f'{API_BASE}{path}',
+        params=signed,
+        data=signed,
+        timeout=timeout,
+        headers={'User-Agent': USER_AGENT},
+    )
+    resp.raise_for_status()
+    return resp.json() or {}

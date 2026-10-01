@@ -1,0 +1,24 @@
+{% comment %}
+海角社区搜索框（海角列表页与海角搜索页共用）。
+
+为什么不复用页头那个搜索框：页头搜索走 555 影视线路，海角社区是另一条独立线路
+（帖子标题/板块/详情地址完全不同），共用一个框会让人分不清在搜哪边的内容。
+
+用普通 GET 表单、不依赖 JS：提交后得到 /haijiao/search.html?key=关键词。
+关键词走查询参数而不是路径段 —— 用户任意输入，含斜杠时路径式会产生歧义。
+参数名是 key（与视图 request.GET['key'] 对齐）。
+
+keyword 由搜索页上下文带入时会回填到输入框；列表页没有这个变量，即为空。
+{% endcomment %}
+<form class="mt-3 flex items-center gap-2" method="get" action="/haijiao/search.html" autocomplete="off" role="search">
+    <label class="input input-sm w-full items-center gap-2 sm:max-w-md">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 opacity-50" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.2-3.2" />
+        </svg>
+        <input type="text" name="key" value="{{ keyword }}" class="grow" placeholder="搜海角帖子（如：原创、夫妻）"
+            autocomplete="off" maxlength="50" aria-label="搜索海角社区帖子" />
+    </label>
+    <button type="submit" class="btn btn-primary btn-sm shrink-0">搜索</button>
+</form>

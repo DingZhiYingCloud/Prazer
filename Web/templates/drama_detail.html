@@ -1,0 +1,67 @@
+{% extends 'template.html' %}
+{% load xy_pic %}
+
+{% block title %}{{ detail.name }} - 短剧免费在线观看 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}{{ detail.name }},短剧,红果短剧,免费短剧,在线观看,{{ SITE_NAME }}{% endblock %}
+{% block description %}{{ detail.name }}短剧免费在线观看{% if detail.episode_cnt %}，全 {{ detail.episode_cnt }} 集{% endif %}，{{ SITE_BRAND }}免注册、免登录即可观看。{% endblock %}
+{% block og_title %}{{ detail.name }} - 短剧{% endblock %}
+{% block og_image %}{% if detail.cover %}{{ request.scheme }}://{{ request.get_host }}{% pic detail.cover %}{% else %}{{ request.scheme }}://{{ request.get_host }}/media/logo.png{% endif %}{% endblock %}
+{# 未开放的集数占多数时页面内容偏薄，这里保持与列表页一致的收录策略 #}
+{% block robots %}index, follow{% endblock %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+
+    <div class="mt-3 flex gap-4 sm:gap-6">
+        <img src="{% pic detail.cover %}" alt="{{ detail.name }}"
+            class="h-40 w-28 shrink-0 rounded-lg border border-base-300 bg-base-200 object-cover sm:h-56 sm:w-40" />
+
+        <div class="min-w-0 flex-1">
+            <h1 class="text-xl font-bold sm:text-2xl">{{ detail.name }}</h1>
+
+            {% if detail.tags %}
+            <div class="mt-2 flex flex-wrap gap-1.5">
+                {% for tag in detail.tags %}
+                <span class="badge badge-ghost badge-sm">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <p class="mt-3 text-sm opacity-70">
+                全 {{ detail.episode_cnt }} 集，已上架 {{ listed_cnt }} 集
+            </p>
+            {% if detail.episode_cnt > listed_cnt %}
+            {# 一句话说清"为什么有些集带锁"，避免访客以为是本站故障 #}
+            <p class="mt-1 text-xs opacity-50">
+                带锁的集暂无可用播放地址，我们正在扩展存储空间，后续会陆续上架。
+            </p>
+            {% endif %}
+
+            {% if listed_cnt %}
+            <a href="/drama/play/{{ series_id }}/1.html" class="btn btn-primary btn-sm mt-4">从第 1 集开始看</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if detail.intro %}
+    <div class="mt-6">
+        <h2 class="mb-2 flex items-center gap-2 text-lg font-bold">
+            <span class="inline-block h-5 w-1.5 rounded-full bg-primary"></span>剧情简介
+        </h2>
+        <p class="mt-1 whitespace-pre-line break-words text-sm leading-relaxed opacity-80">{{ detail.intro }}</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-6">
+        <h2 class="mb-3 flex items-center gap-2 text-lg font-bold">
+            <span class="inline-block h-5 w-1.5 rounded-full bg-primary"></span>选集
+        </h2>
+        {% include 'common_html/drama_episodes.html' with series_id=series_id episodes=episodes %}
+    </div>
+
+    <div class="mt-8">
+        <a href="/list/125.html" class="btn btn-ghost btn-sm">返回短剧首页</a>
+    </div>
+</section>
+{% endblock %}

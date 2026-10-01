@@ -791,3 +791,124 @@ a:focus-visible .xy-card-hint {
     transform: scaleX(0.92);
   }
 }
+
+/* ============================================================
+ * 海角社区帖子正文：媒体统一排版
+ * ------------------------------------------------------------
+ * 正文是一段外部 HTML（段落 + 内联 <img>），尺寸不受本站控制，
+ * 所以在这里统一成：居中、等比缩放、限高（一张竖图不至于占满几屏）、
+ * 主题色描边（深浅主题下都能看清图片边界）、可点击放大
+ * （cursor: zoom-in，放大逻辑见 common.js 的 [data-zoom-group]）。
+ * ============================================================ */
+.xy-hj-content {
+  color: var(--color-base-content);
+  overflow-wrap: break-word;
+}
+
+.xy-hj-content p {
+  margin-bottom: 0.75rem;
+  /* 源站正文靠 <br>/空段落换行，保留原始换行，避免整段挤成一行 */
+  white-space: pre-line;
+}
+
+.xy-hj-content img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 70vh;
+  margin: 0.75rem auto;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-box);
+  background-color: var(--color-base-200);
+  object-fit: contain;
+  cursor: zoom-in;
+}
+
+/* ---------- 源站付费门槛提示 ----------
+ * 源站正文里用 <span class="sell-btn">（内含 sell_line1 / sell_line2）标记"这段要花钱买"。
+ * 不给样式的话它就是一段裸露的正文，访客会当成页面出错或本站的说明。
+ * 所以做成一块提示条：警示色虚线框 + 淡底 + 居中。
+ * 只改外观，文字仍是源站原文 —— 本站不接购买流程，也没有解锁能力，不虚构任何"已购买"状态。 */
+.xy-hj-content .sell-btn {
+  display: block;
+  margin: 0.75rem 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px dashed var(--color-warning);
+  border-radius: var(--radius-box);
+  background-color: color-mix(in oklab, var(--color-warning) 12%, transparent);
+  color: var(--color-base-content);
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  /* 提示条自己排版，不再继承段落的白空格规则 */
+  white-space: normal;
+}
+
+.xy-hj-content .sell-btn > span {
+  display: block;
+}
+
+.xy-hj-content .sell_line1 {
+  font-weight: 600;
+}
+
+.xy-hj-content .sell_line2 {
+  opacity: 0.65;
+}
+
+/* ============================================================
+ * 图片放大浮层（由 common.js 在点击 [data-zoom-group] 内的图片时创建）
+ * ------------------------------------------------------------
+ * 跟随主题（底色取 base-100 半透明 + 毛玻璃），与站内"零入场动画"一致：
+ * 点击即出现、关闭即消失，不做缩放/淡入。
+ * 翻页按钮放底部操作栏而不是压在图片两侧 —— 窄屏上侧边按钮会盖住图片。
+ * ============================================================ */
+#xy-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  background-color: color-mix(in oklab, var(--color-base-100) 94%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+/* 本选择器优先级高于 UA 的 [hidden]{display:none}，必须显式补一条 */
+#xy-lightbox[hidden] {
+  display: none;
+}
+
+.xy-lb-bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.xy-lb-stage {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 0 1rem;
+}
+
+.xy-lb-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--radius-box);
+  object-fit: contain;
+}
+
+.xy-lb-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 1.25rem;
+}
+

@@ -1,0 +1,204 @@
+{% extends 'template.html' %}
+{% load xy_pic %}
+
+{% block title %}{{ detail.name }} 第 {{ ep }} 集 - 短剧在线观看 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}{{ detail.name }},短剧第 {{ ep }} 集,短剧在线观看,红果短剧,{{ SITE_NAME }}{% endblock %}
+{% block description %}{{ detail.name }}第 {{ ep }} 集在线观看{% if detail.episode_cnt %}，全 {{ detail.episode_cnt }} 集{% endif %}，{{ SITE_BRAND }}免注册、免登录即可观看。{% endblock %}
+{% block og_title %}{{ detail.name }} 第 {{ ep }} 集{% endblock %}
+{# 播放页不收录：内容是带时效的外部直链，收录没有意义 #}
+{% block robots %}noindex, follow{% endblock %}
+{% block head %}
+{% comment %}
+整页不带 Referer：红果源站直链的 CDN 对**任何**带 Referer 的请求都回 403
+（实测 unsafe-url / 本站域名 / 源站域名 全 403，不带 Referer 则正常 206），
+而浏览器请求跨域媒体默认会带上本站地址 —— 不显式关掉，第 1~3 集 MP4 在真实浏览器里必然加载失败。
+{% endcomment %}
+<meta name="referrer" content="no-referrer" />
+{% if playable and video_url %}<link rel="stylesheet" href="/static/js/vendor/xgplayer.min.css" />{% endif %}
+{% endblock %}
+
+{% block content %}
+{% comment %}
+短剧播放：红果线路的前几集是源站明文 MP4 直链；第 4 集及以后是「外部托管 + 登记链接」，
+链接可能是 mp4 也可能是 m3u8（见小影 API 的 /api/dramas/hongguo/episode_video/save）。
+
+所以这里统一用 xgplayer（与 555 播放页同一套）：mp4 与 m3u8 都能播，还顺带拿到它的移动端手势。
+**不要换回原生 <video>** —— 原生 video 在 Chrome 上播不了 m3u8，会让第 4 集起的链接全黑屏。
+
+未上架的集不渲染播放器，直接给说明（列表页对这些集做的是锁标记、点击只弹提示不跳转，
+本页是访客直接输地址进来的兜底）。
+{% endcomment %}
+<section class="mx-auto w-full max-w-5xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+
+    <div class="mt-2 flex flex-wrap items-baseline justify-between gap-2">
+        <h1 class="line-clamp-1 text-lg font-bold sm:text-xl">{{ detail.name }} · 第 {{ ep }} 集</h1>
+        {# 手机端手势提示：只在窄屏显示（PC 上用不到手势） #}
+        {% if playable and video_url %}<p class="text-xs opacity-50 lg:hidden">左右滑动画面可调节进度</p>{% endif %}
+    </div>
+
+    {% if playable and video_url %}
+    {% comment %}
+    ready 为 False 表示「服务端直出」的产物还在生成（首次点播某一集要解密 + 转 H.264，
+    实测约 25 秒）。此时播放器先不建，给等待占位，探测到就绪再起播 ——
+    否则播放器会对着一个 202 的 JSON 响应报错，访客只看到"播放失败"。
+    {% endcomment %}
+    {# 播放器容器：宽高由 aspect-video 定好，播放器自己往里填 #}
+    <div id="xy-player" class="mt-3 aspect-video w-full overflow-hidden rounded-box bg-black{% if not ready %} hidden{% endif %}"></div>
+    <div id="xy-waiting" class="mt-3 flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-box border border-base-300 bg-base-200 px-4 text-center{% if ready %} hidden{% endif %}">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <p class="text-sm font-medium">正在生成播放地址…</p>
+        <p class="max-w-sm text-xs opacity-60">
+            该集首次点播需要解密转码，通常数十秒，请稍候（已等待 <span id="xy-wait-secs">0</span> 秒）。
+        </p>
+    </div>
+    <p id="xy-player-fail" class="mt-2 hidden text-sm text-error">
+        播放失败：该播放源可能已失效，或当前浏览器不支持该格式。请稍后重试，或更换 Chrome / Edge / Safari 浏览器。
+    </p>
+    {% else %}
+    <div class="mt-3 flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-box border border-base-300 bg-base-200 px-4 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-10 w-10 opacity-50"
+            aria-hidden="true">
+            <rect x="4" y="10.5" width="16" height="10.5" rx="2" />
+            <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+        </svg>
+        <p class="text-sm font-medium">第 {{ ep }} 集暂未上架</p>
+        <p class="max-w-sm text-xs opacity-60">
+            该集暂无可用播放地址。我们正在扩展存储空间，后续会上架更多短剧，
+            已上架的 {{ listed_cnt }} 集现在就能看。
+        </p>
+    </div>
+    {% endif %}
+
+    <div class="mt-3 flex flex-wrap items-center gap-2 text-xs opacity-60">
+        <span>共 {{ episode_count }} 集</span>
+        <span>·</span>
+        <a href="/drama/detail/{{ series_id }}.html" class="link link-hover">查看剧集详情</a>
+        <span>·</span>
+        <a href="/list/125.html" class="link link-hover">更多短剧</a>
+    </div>
+
+    <div class="mt-6">
+        <h2 class="mb-3 flex items-center gap-2 text-base font-bold">
+            <span class="inline-block h-4 w-1.5 rounded-full bg-primary"></span>选集
+        </h2>
+        {% include 'common_html/drama_episodes.html' with series_id=series_id episodes=episodes current_ep=ep %}
+    </div>
+</section>
+{% endblock %}
+
+{% block js %}
+{% if playable and video_url %}
+{% pic poster as poster_src %}
+{% comment %}
+播放器：西瓜播放器（与 555 播放页同一套，本地文件见 Web/static/js/vendor/）。
+
+m3u8 引擎：插件文件照常加载，但**只在 URL 是 m3u8 时才注册**（见下方 isHls），
+由插件自己决定怎么解流（内部会判断 MSE 等能力）。**不能用 canPlayType 判断"浏览器原生支持 HLS"**
+—— 实测桌面 Chrome 对 'application/vnd.apple.mpegurl' 也返回 "maybe"，
+据此跳过插件会让 Firefox 等浏览器彻底播不了。
+{% endcomment %}
+<script src="/static/js/vendor/xgplayer.min.js"></script>
+<script src="/static/js/vendor/xgplayer-hls.min.js"></script>
+<script>
+    (function () {
+        var url = "{{ video_url|escapejs }}";
+        var box = document.getElementById('xy-player');
+        var waiting = document.getElementById('xy-waiting');
+        var waitSecs = document.getElementById('xy-wait-secs');
+        var fail = document.getElementById('xy-player-fail');
+        if (!url || !box || !window.Player) return;
+
+        function showFail() {
+            if (waiting) waiting.classList.add('hidden');
+            if (fail) fail.classList.remove('hidden');
+        }
+
+        function buildPlayer() {
+            var config = {
+                id: 'xy-player',
+                url: url,
+                poster: "{{ poster_src|escapejs }}",
+                lang: 'zh-cn',
+                width: '100%',
+                height: '100%',
+                autoplay: false,
+                playsinline: true,          // 手机端不全屏接管，页面内播放
+                volume: 0.8,
+                // 键盘快捷键（播放器自身）：←/→ 快退快进、空格暂停、M 静音、F 全屏
+                keyboard: { seekStep: 10 },
+                // 手机端手势（mobile 插件，仅移动端注册）
+                mobile: {
+                    gestureX: true,         // 左右滑动调进度 + 时间预览
+                    gestureY: true,         // 右半边调音量、左半边调亮度
+                    pressRate: 2,           // 长按 2 倍速
+                    darkness: true,         // 左半边调暗（网页改不了系统亮度，用蒙层模拟）
+                },
+            };
+            // 只有 m3u8 才挂 HLS 插件：源站 MP4 直链若交给它，会被强行塞进 MSE（src 变 blob:），
+            // 而非分片 MP4 无法 append，播放器就停在 readyState=0 —— 表现为"打不开"。
+            // 接口的 url_type 只在「已登记外链」上才有，源站直链没有，所以按地址后缀判断。
+            var isHls = /\.m3u8(\?|#|$)/i.test(url);
+            if (isHls) {
+                if (window.HlsPlayer) {
+                    config.plugins = [window.HlsPlayer];
+                } else if (!document.createElement('video').canPlayType('application/vnd.apple.mpegurl')) {
+                    // 插件没加载成功，且浏览器也不支持 HLS：直接提示，不让访客对着黑屏等
+                    showFail();
+                }
+            }
+
+            var player = new window.Player(config);
+            // 播放源可能失效（令牌过期 / 403 / 网络不通），给出明确提示而不是让播放器静默空转
+            player.on('error', showFail);
+            window.xyPlayer = player;   // 挂到全局，方便排查播放问题
+        }
+
+        // 产物还没生成时，先用一个隐藏的 <video> 探活，就绪了再建播放器。
+        //
+        // 为什么用 <video> 探活而不是 fetch：媒体元素的请求**不受 CORS 约束**，
+        // 而生产环境的小影 API 未必开着跨域，用 fetch 会读不到状态。
+        //
+        // 另外注意：出流端点「未就绪」返回 202 + JSON，「转码失败」返回 **200** + JSON，
+        // 所以不能只看 HTTP 状态码（照着文档"轮询到 200 即可播放"会被失败态骗到）；
+        // 交给 <video> 自己的 loadedmetadata / error 事件判断最稳。
+        function waitUntilReady() {
+            var probe = document.createElement('video');
+            probe.muted = true;
+            probe.preload = 'metadata';
+            var STEP = 5000;            // 轮询间隔
+            var MAX = 60;               // 上限 60 次 ≈ 5 分钟，超过按失败处理
+            var tried = 0;
+            var startedAt = Date.now();
+
+            function probeOnce() {
+                tried += 1;
+                // 每次换一个一次性参数：否则浏览器可能直接复用上一次的 202 响应，永远探测不到变化
+                var sep = url.indexOf('?') < 0 ? '?' : '&';
+                probe.src = url + sep + '_probe=' + tried;
+                probe.load();
+            }
+
+            probe.addEventListener('loadedmetadata', function () {
+                if (waiting) waiting.classList.add('hidden');
+                box.classList.remove('hidden');
+                buildPlayer();
+            });
+            probe.addEventListener('error', function () {
+                if (waitSecs) waitSecs.textContent = String(Math.round((Date.now() - startedAt) / 1000));
+                if (tried >= MAX) { showFail(); return; }
+                setTimeout(probeOnce, STEP);
+            });
+            probeOnce();
+        }
+
+        if ({{ ready|yesno:'true,false' }}) {
+            buildPlayer();
+        } else {
+            waitUntilReady();
+        }
+    })();
+</script>
+{% endif %}
+{% endblock %}

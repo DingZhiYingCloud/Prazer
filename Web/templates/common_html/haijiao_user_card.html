@@ -1,0 +1,18 @@
+{% comment %}
+用户名片（「我关注的人」/「我的粉丝」共用）。
+字段由 Web/views/haijiao_account.py 的 _user_card() 整理，头像已解密。
+{% endcomment %}
+<li class="flex items-center gap-3 rounded-box border border-base-300 bg-base-100 p-3 transition hover:border-primary/30">
+    <img src="{% if item.avatar %}{{ item.avatar }}{% else %}/media/placeholder.png{% endif %}" alt=""
+        loading="lazy" class="h-11 w-11 shrink-0 rounded-full border border-base-300 bg-base-200 object-cover" />
+    <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-medium">{{ item.nickname }}</p>
+        {% if item.description %}
+        <p class="mt-0.5 line-clamp-1 text-xs text-base-content/60">{{ item.description }}</p>
+        {% endif %}
+    </div>
+    <span class="flex shrink-0 items-center gap-1 text-xs text-base-content/60">
+        {% include 'common_html/haijiao_icon.html' with name='users' class='h-3.5 w-3.5 shrink-0' %}
+        {{ item.fans_count }} 粉丝
+    </span>
+</li>

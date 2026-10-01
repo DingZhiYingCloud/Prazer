@@ -1,0 +1,30 @@
+{% extends 'template.html' %}
+
+{% block title %}海角社区{{ ranking.board_label }}{{ ranking.period_label }} - 排行榜 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}海角社区排行榜,{{ ranking.board_label }},{{ ranking.period_label }},{{ SITE_NAME }}{% endblock %}
+{% block description %}海角社区{{ ranking.board_label }}（{{ ranking.period_label }}）共 {{ ranking.total }} 位用户，按源站公开榜单实时展示。{% endblock %}
+{% block og_title %}海角社区{{ ranking.board_label }}{{ ranking.period_label }}{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+
+{% block content %}
+{% comment %}
+完整排行榜：3 个维度 × 3 个周期（粉丝 / 点赞 / 人气 × 总榜 / 月榜 / 周榜）。
+维度与周期都走查询参数 ?board=&period=，非法值在视图层回落到默认；
+条目一次全给（源站不翻页，约 101 条），所以没有分页器。
+{% endcomment %}
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+    {% include 'common_html/haijiao_user_bar.html' %}
+
+    <h1 class="mt-2 text-2xl font-bold sm:text-3xl">海角社区排行榜</h1>
+    <p class="mt-1 text-sm text-base-content/60">
+        粉丝榜 / 点赞榜 / 人气榜，每张榜另有总榜、月榜、周榜。排名与数值来自海角社区公开榜单。
+    </p>
+
+    {% include 'common_html/haijiao_ranking.html' %}
+
+    <div class="mt-8">
+        <a href="/haijiao/list.html" class="btn btn-ghost btn-sm">返回海角首页</a>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% comment %}
+短剧集号网格：详情页与播放页共用。
+
+用法：
+    {% include 'common_html/drama_episodes.html' with series_id=series_id episodes=episodes current_ep=ep %}
+
+- ep.playable 为真 → 链接到播放页；
+- ep.playable 为假（该集尚未上架播放地址）→ 带锁图标，点击只弹提示、不跳转。
+  「是否可播」一律以接口返回的 playable 为准（接口已合并源站直链 / 已登记外链 / 服务端直出
+  三条来源），不要在本站写死"第 4 集"或按集号推算 —— 能播哪些集由接口说了算，这里自动跟着变。
+
+窄屏用 5 列：320px 屏上每格约 52px，而"3 位数集号 + 锁图标"约需 44px（含内边距），
+所以 px-1 + gap-1.5 是按下限留的余量 —— 收得太紧就会把格子撑出页面（横向滚动条）。
+集号位数更多时（如 4 位数）仍在余量内。
+
+多行说明必须用 {% comment %} 包裹：Django 的 {# #} 只支持单行，写成多行会当普通文本原样输出。
+{% endcomment %}
+<div class="grid grid-cols-5 gap-1.5 sm:grid-cols-8 sm:gap-2 lg:grid-cols-10">
+    {% for item in episodes %}
+    {% if item.playable %}
+    <a href="/drama/play/{{ series_id }}/{{ item.ep }}.html"
+        class="flex items-center justify-center rounded-lg border px-1 py-2 text-xs transition-colors
+        {% if current_ep == item.ep %}border-primary bg-primary font-medium text-primary-content{% else %}border-base-300 bg-base-100 hover:border-primary hover:text-primary{% endif %}"
+        title="第 {{ item.ep }} 集">{{ item.ep }}</a>
+    {% else %}
+    <button type="button"
+        class="flex items-center justify-center gap-0.5 rounded-lg border border-base-300 bg-base-200 px-1 py-2 text-xs opacity-60"
+        title="第 {{ item.ep }} 集暂未上架"
+        onclick="bzToast('第 {{ item.ep }} 集暂未上架，正在扩展存储')">
+        {{ item.ep }}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 shrink-0" aria-hidden="true">
+            <rect x="4" y="10.5" width="16" height="10.5" rx="2" />
+            <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+        </svg>
+    </button>
+    {% endif %}
+    {% endfor %}
+</div>

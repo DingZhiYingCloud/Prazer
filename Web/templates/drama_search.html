@@ -1,0 +1,47 @@
+{% extends 'template.html' %}
+
+{% block title %}搜索「{{ keyword }}」 - 短剧 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}短剧搜索,{{ keyword }},红果短剧,{{ SITE_NAME }}{% endblock %}
+{% block description %}在{{ SITE_NAME }}搜索短剧「{{ keyword }}」，{{ SITE_BRAND }}免注册、免登录即可在线观看。{% endblock %}
+{% block og_title %}搜索「{{ keyword }}」 - 短剧{% endblock %}
+{# 搜索结果页不收录：内容随关键词变化，放开收录只会产生大量薄内容页 #}
+{% block robots %}noindex, follow{% endblock %}
+
+{% block content %}
+{# 关键词交给 common.js 做片名高亮（与影视搜索页同一套机制，没有关键词时是空操作） #}
+<span data-hl-source="{{ keyword }}" hidden></span>
+
+{% comment %}
+短剧搜索：只搜红果短剧线路，与影视搜索（/so/）是完全独立的两套数据源，刻意不做合并。
+
+红果源站的搜索不支持分页（恒返回单页 10 条），所以本页没有分页器 —— 不要照搬 /so/ 的分页。
+{% endcomment %}
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+
+    <h1 class="mt-2 text-xl font-bold sm:text-2xl">搜索「{{ keyword }}」</h1>
+    <p class="mt-1 text-sm opacity-60">短剧搜索结果，共 {{ items|length }} 部</p>
+
+    {% include 'common_html/drama_search_box.html' %}
+
+    {% if items %}
+    <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        {% for item in items %}
+        {% include 'common_html/movie_card.html' with item=item detail_base='/drama/detail' %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="mt-10 flex flex-col items-center gap-3 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12 opacity-30"
+            aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.2-3.2" />
+        </svg>
+        {# 红果源站对任何关键词都会回一批（没匹配就回推荐内容），所以这里基本只在接口故障时出现 #}
+        <p class="text-sm opacity-60">暂时没能取到「{{ keyword }}」的短剧结果，稍后刷新试试。</p>
+        <a href="/list/125.html" class="btn btn-primary btn-sm mt-1">浏览短剧分类</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

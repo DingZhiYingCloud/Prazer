@@ -9,11 +9,11 @@ import re
 from urllib.parse import quote
 
 from django.core.cache import cache
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.html import escape
 
-from API.apis import movie
+from API.apis import drama, movie
 from Web.services import pager
 from Web.views.pic import pic_url
 
@@ -24,6 +24,12 @@ logger = logging.getLogger(__name__)
 ORDERS = {'time': '按时间', 'hits': '按人气', 'score': '按评分'}
 # 列表页支持的可选参数（用于拼筛选链接时保留其它条件）
 FILTER_KEYS = ('order', 'year', 'area', 'genre', 'lang')
+
+# ============ 短剧专区（红果短剧线路）============
+# 短剧首页沿用原「短剧」子分类的地址 /list/125.html，但数据源换成小影 API 的红果线路
+# （见 API/apis/drama.py）。详情与播放必须另开 /drama/ 前缀：红果的 series_id 与
+# 555 的 vod_id 是两套编号，共用 /detail/<id>.html 会撞车。
+DRAMA_HOME = '/list/125.html'
 
 # 源站把这些字段用 "/" 串起来，且结尾会多一个斜杠（如 "申奥/张艺凡/许渌洋/"），
 # 直接显示就是一串斜杠。这些字段改成按名字切分、用小标签排版（见 detail.html）。
@@ -323,6 +329,307 @@ def search(request, keyword, page=1):
         'total_pages': total_pages,
         'pagination': {'links': pager.build(page, total_pages, page_url)},
         'breadcrumbs': [{'label': '首页', 'href': '/'}, {'label': '搜索'}],
+    })
+
+
+# ============ 短剧专区（红果短剧线路）============
+# 详见 API/apis/drama.py。页面形态与 555 分类页保持一致（胶囊筛选 + 分页器 + 影片卡片），
+# 区别是筛选维度只有「榜单 / 分类」两组，且各自就是独立频道页（路径不同、无查询参数），
+# 这样每个频道都有自己的地址与收录资格。
+
+
+def _drama_total_pages(value, default=1):
+    """把接口给的总页数收敛成 >=1 的整数（接口异常时回退 default）"""
+    try:
+        return max(1, int(value or default))
+    except (TypeError, ValueError):
+        return 1
+
+
+def _drama_cards(items):
+    """把红果条目整理成影片卡片能用的形状
+
+    红果条目的主键是 series_id，而卡片模板认的是 item.id（见 common_html/movie_card.html）；
+    榜单条目还带 rank / heat，拼成卡片下方那一行说明。
+    """
+    cards = []
+    for item in items or []:
+        series_id = item.get('series_id')
+        if not series_id:
+            continue
+        note = item.get('heat') or ''
+        if item.get('rank'):
+            note = f'No.{item["rank"]}' + (f' · {note}' if note else '')
+        tags = item.get('tags') or []
+        cards.append({
+            'id': series_id,
+            'name': item.get('name') or '',
+            'cover': item.get('cover') or '',
+            'note': note,
+            'category': tags[0] if tags else '短剧',
+        })
+    return cards
+
+
+def _drama_listed_cnt(detail):
+    """已上架集数
+
+    接口的 listed_cnt 是「源站直链 + 已登记外链」的实际可播集数（可能不连续）；
+    而 playable_cnt 只是源站直链的连续范围，用它会把已上架的集算漏。
+    保留后者的兜底是为了兼容还没上 listed_cnt 的旧接口。
+    """
+    detail = detail or {}
+    return detail.get('listed_cnt') or detail.get('playable_cnt') or 0
+
+
+def _drama_tree(categories):
+    """把接口的分类树整理成 (一级列表, 一级 slug -> 二级列表)
+
+    接口的分类是两级的：一级是内容形态（真人剧 / 漫剧 / AI剧 / 漫画），二级是题材。
+    二级的 slug 形如 `real-drama/romance`（**带斜杠**），所以：
+        slug   传给分类列表接口的取值（也等于「一级/二级」拼起来）
+        tag    落在地址第二段的那部分（romance），即 slug 去掉「一级/」前缀
+    漫画这类没有二级的一级，children 为空列表。
+    """
+    tops, children = [], {}
+    for node in categories or []:
+        slug = (node.get('slug') or '').strip()
+        if not slug:
+            continue
+        tops.append({'slug': slug, 'name': node.get('name') or slug})
+        kids = []
+        for child in node.get('children') or []:
+            child_slug = (child.get('slug') or '').strip()
+            if not child_slug:
+                continue
+            kids.append({
+                'slug': child_slug,
+                'name': child.get('name') or child_slug,
+                'tag': child_slug[len(slug) + 1:] if child_slug.startswith(slug + '/') else child_slug,
+            })
+        children[slug] = kids
+    return tops, children
+
+
+def _drama_category(category, tops, children):
+    """分类取值 -> (显示名, 简介短语)
+
+    一级用自身名；二级写成「一级 · 题材」—— 题材名在不同一级下重名（剧情/玄幻/奇幻/科幻），
+    只写题材名访客不知道自己在哪个大类里。
+    """
+    top_slug, _, tag = category.partition('/')
+    top_name = next((t['name'] for t in tops if t['slug'] == top_slug), top_slug) or '短剧'
+    if not tag:
+        return top_name, f'{top_name}短剧'
+    child_name = next((c['name'] for c in children.get(top_slug, []) if c['tag'] == tag), tag)
+    return f'{top_name} · {child_name}', f'{top_name}{child_name}题材短剧'
+
+
+def _drama_source_links(tops, children, selected_category):
+    """顶部两组筛选项：一级分类 + 题材，都来自接口的分类树
+
+    两组满足「点题材即进入该一级下的题材」的包含关系，所以一级的选中态用前缀匹配。
+    题材行只展示**当前所属一级**的题材 —— 全部平铺会有 40 个胶囊，且多组同名题材
+    （剧情/玄幻/奇幻/科幻 在多个一级下都有）会分不清归属。
+    """
+    top_links = [
+        {'label': item['name'], 'href': f'/list/125/{item["slug"]}.html',
+         'active': selected_category == item['slug'] or selected_category.startswith(item['slug'] + '/')}
+        for item in tops
+    ]
+
+    # 展开哪个一级的题材：就是当前所在的一级（首页落在接口返回的第一个一级）。
+    # 该一级若本来就没有二级（如漫画），题材行会整行隐藏 —— 不写死任何 slug。
+    current_top = selected_category.split('/', 1)[0]
+    tag_links = [
+        {'label': item['name'], 'href': f'/list/125/{item["slug"]}.html',
+         'active': selected_category == item['slug']}
+        for item in children.get(current_top, [])
+    ]
+    return top_links, tag_links
+
+
+def _drama_channel(key, tag, tops, children, default_top):
+    """把频道标识解析成分类取值；key 为空时落到默认一级分类（首页展示的那个）
+
+    未知的 key / tag 直接 404，否则 /list/125/随便一个词.html 都会渲染出一个空壳页。
+    例外：接口挂了导致分类清单为空时不做校验 —— 否则接口一抖动，所有分类频道都会变 404，
+    而"渲染一个空页、稍后恢复"才是本项目一贯的降级取向。
+    """
+    if not key:
+        return default_top
+    slugs = {item['slug'] for item in tops}
+    if not slugs or key in slugs:
+        if tag:
+            for item in children.get(key, []):
+                if item['tag'] == tag:
+                    return item['slug']
+            if children:      # 分类清单拿到了，说明这个题材确实不存在
+                raise Http404(f'未知的短剧分类: {key}/{tag}')
+        return key
+    raise Http404(f'未知的短剧频道: {key}')
+
+
+def drama_list(request, page=1, key=None, tag=None):
+    """短剧专区：分类列表（带分页）
+
+    地址沿用原「短剧」子分类的 /list/125.html，但数据源换成了红果线路。
+    首页 = 接口返回的**第一个一级分类**（接口没有"全部短剧"这种列表源，必须落到某个分类）：
+        /list/125.html                          首页分类的第 1 页
+        /list/125/<页>.html                     首页分类的分页
+        /list/125/<一级>.html                   某个一级分类的第 1 页（首页那个会收敛到首页）
+        /list/125/<一级>/<页>.html              该一级分类的分页
+        /list/125/<一级>/<题材>.html            某个二级题材的第 1 页
+        /list/125/<一级>/<题材>/<页>.html       该题材的分页
+    """
+    page = max(1, int(page))
+    key = (key or '').strip()
+    tag = (tag or '').strip()
+
+    categories_data = drama.get_categories() or {}
+    tops, children = _drama_tree(categories_data.get('categories'))
+    default_top = tops[0]['slug'] if tops else ''
+    category = _drama_channel(key, tag, tops, children, default_top)
+
+    # 地址收敛：首页那个分类统一用首页地址（第 1 页不带页码），其余频道保持自身路径。
+    # 不做收敛的话同一个列表会有两个地址，收录时互相打架。
+    if category == default_top:
+        canonical = DRAMA_HOME if page == 1 else f'/list/125/{page}.html'
+    else:
+        canonical = (f'/list/125/{category}.html' if page == 1
+                     else f'/list/125/{category}/{page}.html')
+    if request.path != canonical:
+        query = request.META.get('QUERY_STRING', '')
+        return redirect(canonical + (f'?{query}' if query else ''), permanent=True)
+
+    data = drama.get_list(category, page=page) or {}
+    items = data.get('results') or []
+    total_pages = _drama_total_pages((data.get('pagination') or {}).get('total'), default=page)
+    type_name, kind = _drama_category(category, tops, children)
+    page_intro = f'{kind}，持续更新'
+
+    def page_url(target):
+        """生成分页地址（沿用当前频道）"""
+        target = min(max(1, int(target)), total_pages)
+        if category == default_top:
+            return DRAMA_HOME if target == 1 else f'/list/125/{target}.html'
+        return (f'/list/125/{category}.html' if target == 1
+                else f'/list/125/{category}/{target}.html')
+
+    top_links, tag_links = _drama_source_links(tops, children, category)
+    cards = _drama_cards(items)
+    crumbs = [
+        {'label': '首页', 'href': '/'},
+        {'label': '短剧', 'href': DRAMA_HOME},
+    ]
+    # 二级题材页把一级也列进面包屑，访客能一眼看出自己在哪个大类下
+    if '/' in category:
+        top_slug = category.split('/', 1)[0]
+        top_name = next((t['name'] for t in tops if t['slug'] == top_slug), top_slug) or '短剧'
+        crumbs += [{'label': top_name, 'href': f'/list/125/{top_slug}.html'},
+                   {'label': type_name, 'href': page_url(1)}]
+    else:
+        crumbs.append({'label': type_name, 'href': page_url(1)})
+
+    return render(request, 'drama_list.html', {
+        'type_name': type_name,
+        'page_intro': page_intro,
+        'page': page,
+        'total_pages': total_pages,
+        'items': cards,
+        'top_links': top_links,
+        'tag_links': tag_links,
+        # 窄屏题材行收在「更多题材」折叠面板里，折叠时靠它提示当前选的是哪个题材
+        'tag_active_label': next((link['label'] for link in tag_links if link['active']), ''),
+        'pagination': {'links': pager.build(page, total_pages, page_url)},
+        'empty': not cards,
+        'breadcrumbs': crumbs,
+    })
+
+
+def drama_search(request):
+    """短剧搜索：只搜红果短剧这条线路（见 API/apis/drama.py 的 get_search）
+
+    与影视搜索（/so/，走 555 线路）是两套独立数据源，刻意不合并：合并后用户分不清结果
+    来自哪条线，而且两边的详情地址也是两套。所以短剧有自己独立的搜索框与搜索页。
+
+    URL 用查询参数而不是路径段：关键词是用户任意输入，含斜杠时路径式会歧义
+    （/so/<关键词>.html 那条就踩过）；搜索页本来也不收录，URL 形态对 SEO 没有影响。
+
+    红果源站的搜索不支持分页（恒返回单页 10 条），所以本页没有分页器。
+    """
+    keyword = (request.GET.get('kw') or '').strip()
+    if not keyword:
+        return redirect(DRAMA_HOME)
+
+    data = drama.get_search(keyword) or {}
+    return render(request, 'drama_search.html', {
+        'keyword': keyword,
+        'items': _drama_cards(data.get('results')),
+        'breadcrumbs': [
+            {'label': '首页', 'href': '/'},
+            {'label': '短剧', 'href': DRAMA_HOME},
+            {'label': f'搜索「{keyword}」'},
+        ],
+    })
+
+
+def drama_detail(request, series_id):
+    """短剧详情：简介 / 标签 / 全量集号（尚未上架的集在模板里带锁标记）"""
+    data = drama.get_detail(series_id)
+    if not data:
+        return error_404(request)
+    return render(request, 'drama_detail.html', {
+        'series_id': series_id,
+        'detail': data,
+        'episodes': data.get('episodes') or [],
+        'listed_cnt': _drama_listed_cnt(data),
+        'breadcrumbs': [
+            {'label': '首页', 'href': '/'},
+            {'label': '短剧', 'href': DRAMA_HOME},
+            {'label': data.get('name') or '短剧详情'},
+        ],
+    })
+
+
+def drama_play(request, series_id, ep):
+    """短剧播放：模板用 xgplayer 播（源站直链与直出都是 MP4，已登记外链可能是 m3u8）
+
+    尚未上架的集接口会回 50002，这里渲染成说明页而不是 404 —— 地址是有效的，
+    只是内容还没上线（列表页对这些集做了锁标记、点击不跳转，本页是直接输地址进来的兜底）。
+    """
+    data = drama.get_detail(series_id)
+    if not data:
+        return error_404(request)
+    episodes = data.get('episodes') or []
+    if ep < 1 or ep > len(episodes):
+        return error_404(request)
+
+    play_data = drama.get_play(series_id, ep)
+    if play_data is None:
+        return error_404(request)
+
+    name = data.get('name') or '短剧'
+    return render(request, 'drama_play.html', {
+        'series_id': series_id,
+        'detail': data,
+        'ep': ep,
+        'episode_count': len(episodes),
+        # 模板的「选集」网格 include 的是 episodes（少了它网格会是空的）
+        'episodes': episodes,
+        'listed_cnt': _drama_listed_cnt(data),
+        'playable': bool(play_data.get('playable')),
+        'video_url': play_data.get('url') or '',
+        # 「服务端直出」的集首次被点播时，产物还在生成（ready=False，约数十秒），
+        # 页面要据此先给等待提示、就绪后再起播；其余来源没有这个字段，按已就绪处理。
+        'ready': play_data.get('ready', True) is not False,
+        'poster': play_data.get('poster') or data.get('cover') or '',
+        'breadcrumbs': [
+            {'label': '首页', 'href': '/'},
+            {'label': '短剧', 'href': DRAMA_HOME},
+            {'label': name, 'href': f'/drama/detail/{series_id}.html'},
+            {'label': f'第 {ep} 集'},
+        ],
     })
 
 

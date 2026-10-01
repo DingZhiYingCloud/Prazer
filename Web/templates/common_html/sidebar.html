@@ -24,6 +24,23 @@
             <ul class="menu menu-lg xy-sidebar-menu w-full gap-1 p-0">
                 {% include 'common_html/nav_menu.html' %}
             </ul>
+
+            {% if nav_subcategories %}
+            {% comment %}
+            剧集专区：分类接口 sub 段（连续剧的子分类），id 直接当列表页地址用（见 Web/services/movie_nav.py）。
+            与「频道」用同一套菜单样式、同样 44px 触控高度，只靠小标题与字号区分层级，不额外加图标。
+            {% endcomment %}
+            <p class="mt-5 px-3 pb-2 text-xs font-semibold tracking-widest text-base-content/40">剧集专区</p>
+            <ul class="menu xy-sidebar-menu w-full gap-1 p-0">
+                {% for zone in nav_subcategories %}
+                <li>
+                    <a href="/list/{{ zone.id }}.html" data-nav="/list/{{ zone.id }}.html">
+                        <span>{{ zone.name }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
         </nav>
 
         <div class="shrink-0 border-t border-base-300 px-4 py-4 text-xs leading-relaxed text-base-content/50">
@@ -31,6 +48,10 @@
             <p class="mt-1">免注册、免登录，打开网页即可在线观看。</p>
             {% if SITE_CONTACT_WECHAT %}<p class="mt-2">微信：{{ SITE_CONTACT_WECHAT }}</p>{% endif %}
             {% if SITE_CONTACT_TG %}<p>Telegram：{{ SITE_CONTACT_TG }}</p>{% endif %}
+            {# 意见反馈：本地入口 302 跳到小影托管的反馈页（页脚另有「开发者联系方式」弹窗） #}
+            <a href="{% url 'feedback' %}" target="_blank" rel="noopener" class="link link-hover mt-2 inline-block">
+                意见反馈
+            </a>
         </div>
     </aside>
 </div>

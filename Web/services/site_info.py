@@ -11,10 +11,14 @@
     {{ SITE_CONTACT_WECHAT }} 微信号
     {{ SITE_CONTACT_TG }}     Telegram
     {{ STATIC_VERSION }}      output.css 的版本号（文件修改时间，用于刷新浏览器缓存）
+    {{ FEEDBACK_API_BASE }}   小影反馈中心基础地址（「开发者联系方式」弹窗走它的免签接口）
+    {{ FEEDBACK_APP_ID }}     本站在小影「接入项目」里的 APPID（反馈数据按它归属）
 """
 import os
 
 from django.conf import settings
+
+from Web.services import feedback
 
 
 def _static_version():
@@ -44,4 +48,7 @@ def site_info(request):
         'SITE_CONTACT_WECHAT': settings.SITE_CONTACT_WECHAT,
         'SITE_CONTACT_TG': settings.SITE_CONTACT_TG,
         'STATIC_VERSION': _static_version(),
+        # 问题反馈中心（小影统一反馈系统）：模板用它渲染「开发者联系方式」弹窗
+        'FEEDBACK_API_BASE': feedback.FEEDBACK_BASE,
+        'FEEDBACK_APP_ID': feedback.FEEDBACK_APP_ID,
     }

@@ -1,0 +1,22 @@
+{% extends 'template.html' %}
+
+{% block title %}视频取不到 - 海角社区 - {{ SITE_NAME_ALT }}{% endblock %}
+
+{% block content %}
+{% comment %}
+视频取不到时的兜底页：haijiao_play 视图在凭据缺失 / 接口异常时会渲染此页并返回 404。
+成功时视图直接吐 m3u8 文本，根本不会进到这里。
+{% endcomment %}
+<section class="mx-auto w-full max-w-3xl px-4 py-10 text-center">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+        class="mx-auto h-12 w-12 opacity-30" aria-hidden="true">
+        <polygon points="6 4 20 12 6 20 6 4" />
+    </svg>
+    <h1 class="mt-4 text-xl font-bold">视频暂时不可用</h1>
+    <p class="mt-2 text-sm opacity-70">{% if error %}{{ error }}{% else %}该视频取不到，请稍后再试。{% endif %}</p>
+    <div class="mt-6">
+        <a href="/haijiao/topic/{{ topic_id }}.html" class="btn btn-primary btn-sm">返回帖子详情</a>
+    </div>
+</section>
+{% endblock %}

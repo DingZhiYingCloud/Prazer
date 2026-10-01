@@ -1,6 +1,7 @@
 {% load xy_pic %}
 {# 影片卡片：分类列表页 / 搜索结果页共用（首页区块用的是 common_html/cards/ 下的样式） #}
 {# 用法：{% include 'common_html/movie_card.html' with item=item %} #}
+{# 短剧专区复用本卡片，用 detail_base 把详情地址换成 /drama/detail（见 drama_list.html） #}
 {# 图片走本站代理（{% pic %} 标签），第三方站点的防盗链/限速/连不上都不会直接砸到访客 #}
 {# data-hl：搜索页会用 common.js 把片名里的关键词高亮（没有关键词时是空操作） #}
 {% comment %}
@@ -9,8 +10,11 @@
 
 注意：这里必须用 {% comment %} 而不是多行 {# … #} —— Django 的 {# #} 注释只支持单行，
 写成多行会当成普通文本原样输出，在 CSS Grid 里还会变成一个占位的匿名网格项。
+
+show_stats：海角个人中心的卡片传 True，把文字版说明换成「图标 + 数字」的互动数据
+（item.stats 由 Web/services/haijiao_cards.py 提供）。不传时行为完全不变。
 {% endcomment %}
-<a href="/detail/{{ item.id }}.html"
+<a href="{{ detail_base|default:'/detail' }}/{{ item.id }}.html"
     class="card block overflow-hidden border border-base-300 bg-base-100"
     title="{{ item.name }}">
     <figure class="relative aspect-[3/4] overflow-hidden bg-base-200">
@@ -26,8 +30,19 @@
     </figure>
     <div class="p-2">
         <h3 class="line-clamp-1 text-sm font-medium" data-hl>{{ item.name }}</h3>
+        {% if show_stats and item.stats %}
+        <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs opacity-60">
+            {% for stat in item.stats %}
+            <span class="inline-flex items-center gap-0.5">
+                {% include 'common_html/haijiao_icon.html' with name=stat.icon class='h-3 w-3 shrink-0' %}
+                {{ stat.value }}
+            </span>
+            {% endfor %}
+        </p>
+        {% else %}
         <p class="mt-0.5 line-clamp-1 text-xs opacity-60">
             {% if item.note %}{{ item.note }}{% else %}{{ item.category }}{% endif %}
         </p>
+        {% endif %}
     </div>
 </a>

@@ -1,0 +1,100 @@
+{% comment %}
+帖子互动区：点赞 / 关注作者 / 打赏 / 收藏。
+
+登录后渲染真实按钮，未登录只给一个登录入口（顺便让「登录」在详情页被看见）。
+全部是普通 POST 表单，不依赖 JS；提交后由视图跳回本页并弹一条结果提示。
+
+⚠️ 打赏会**真实扣掉海角账号里的金币**，所以按钮用描边样式（不用主色实心），
+并在旁边写明扣费，避免误点。
+{% endcomment %}
+<div class="mt-4 flex flex-wrap items-center gap-2">
+    {% if interactions %}
+    <form method="post" action="/haijiao/action/like.html">
+        <input type="hidden" name="topic_id" value="{{ topic_id }}" />
+        <input type="hidden" name="next" value="/haijiao/topic/{{ topic_id }}.html" />
+        <input type="hidden" name="action" value="{% if interactions.liked %}unlike{% else %}like{% endif %}" />
+        <button type="submit" class="btn btn-sm {% if interactions.liked %}btn-primary{% else %}btn-outline{% endif %}">
+            {% if interactions.liked %}已点赞，取消{% else %}点赞{% endif %}
+        </button>
+    </form>
+
+    {% if interactions.author_user_id and not interactions.is_self %}
+    <form method="post" action="/haijiao/action/follow.html">
+        <input type="hidden" name="target_user_id" value="{{ interactions.author_user_id }}" />
+        <input type="hidden" name="next" value="/haijiao/topic/{{ topic_id }}.html" />
+        <input type="hidden" name="action" value="{% if interactions.following %}unfollow{% else %}follow{% endif %}" />
+        <button type="submit" class="btn btn-sm {% if interactions.following %}btn-primary{% else %}btn-outline{% endif %}">
+            {% if interactions.following %}已关注作者，取消{% else %}关注作者{% endif %}
+        </button>
+    </form>
+    {% endif %}
+
+    {% if interactions.gifts %}
+    <form method="post" action="/haijiao/action/give.html"
+        class="flex flex-wrap items-center gap-2 rounded-box border border-base-300 bg-base-100 px-2 py-1.5">
+        <input type="hidden" name="topic_id" value="{{ topic_id }}" />
+        <input type="hidden" name="kind" value="gold" />
+        <input type="hidden" name="next" value="/haijiao/topic/{{ topic_id }}.html" />
+        <span class="text-xs text-base-content/60">打赏作者（我的金币 {{ interactions.gold|default:0 }}，会真实扣费）</span>
+        <select name="item_id" class="select select-xs select-bordered" aria-label="选择礼物">
+            {% for gift in interactions.gifts %}
+            <option value="{{ gift.item_id }}">{{ gift.name }}（{{ gift.price }} 金币）</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="quantity" value="1" min="1" max="99" aria-label="礼物数量"
+            class="input input-xs input-bordered w-16" />
+        <button type="submit" class="btn btn-outline btn-sm">打赏</button>
+    </form>
+    {% endif %}
+
+    {% comment %}
+    收藏：同一帖子重复收藏源站也回成功，而接口没有"是否已收藏"的查询，
+    所以按钮不做"已收藏"态（地址里也就无从判断）；取消收藏在「我的收藏」页里做。
+
+    没合适的收藏夹时可以就地新建：表单单独一个（不套在收藏表单里，
+    否则里头的 required 会拦住「收藏」按钮的提交），提交到同一个
+    favorite-folder 视图 —— 带上 topic_id，建完顺手把这帖收进新夹。
+    {% endcomment %}
+    <form method="post" action="/haijiao/action/favorite.html"
+        class="flex flex-wrap items-center gap-2 rounded-box border border-base-300 bg-base-100 px-2 py-1.5">
+        <input type="hidden" name="topic_id" value="{{ topic_id }}" />
+        <input type="hidden" name="action" value="add" />
+        <input type="hidden" name="next" value="/haijiao/topic/{{ topic_id }}.html" />
+        {% include 'common_html/haijiao_icon.html' with name='bookmark' %}
+        <span class="text-xs text-base-content/60">收藏到</span>
+        <select name="folder_id" class="select select-xs select-bordered" aria-label="选择收藏夹">
+            {% for folder in interactions.favorite_folders %}
+            <option value="{{ folder.folder_id }}">{{ folder.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline btn-sm">收藏</button>
+    </form>
+
+    <details class="rounded-box border border-base-300 bg-base-100 px-2 py-1.5">
+        <summary class="flex cursor-pointer items-center gap-1.5 text-xs text-base-content/60">
+            {% include 'common_html/haijiao_icon.html' with name='folder' class='h-3.5 w-3.5 shrink-0' %}
+            新建收藏夹
+        </summary>
+        <form method="post" action="/haijiao/action/favorite-folder.html" class="mt-2 flex flex-wrap items-center gap-2">
+            <input type="hidden" name="action" value="add" />
+            <input type="hidden" name="topic_id" value="{{ topic_id }}" />
+            <input type="hidden" name="next" value="/haijiao/topic/{{ topic_id }}.html" />
+            <input type="text" name="folder_name" maxlength="12" required aria-label="新收藏夹名称"
+                placeholder="名称（1-12 字）" class="input input-xs input-bordered w-40" />
+            <button type="submit" class="btn btn-outline btn-sm">新建并收藏</button>
+        </form>
+        <p class="mt-1.5 text-xs text-base-content/50">
+            名称限 1-12 字、不可与已有收藏夹重名；建好后这篇帖子会直接收进新夹。
+        </p>
+    </details>
+    {% else %}
+    <a href="/haijiao/login.html?next={{ request.path|urlencode }}" class="btn btn-primary btn-sm gap-1.5">
+        {% include 'common_html/haijiao_icon.html' with name='login' %}
+        登录后可点赞 / 关注 / 打赏 / 收藏
+    </a>
+    <a href="/haijiao/register.html" class="link link-hover flex items-center gap-1.5 text-sm">
+        {% include 'common_html/haijiao_icon.html' with name='user-plus' %}
+        没有账号？注册一个
+    </a>
+    {% endif %}
+</div>

@@ -1,0 +1,107 @@
+{% extends 'template.html' %}
+
+{% block title %}我的收藏 - 个人中心 - 海角社区 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block description %}海角社区我的收藏：按收藏夹查看收藏过的帖子，可取消收藏、管理收藏夹。{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+{% comment %}
+我的收藏：收藏夹筛选 + 卡片网格（封面/标题来自帖子详情，见视图的 _with_details）。
+
+「全部收藏」是源站语义里 folder_id=0 的那一档（跨所有收藏夹），所以它不带查询参数，
+地址最干净；具体收藏夹才带 ?folder_id=<id>。
+收藏夹后面的（数字）是源站给的该夹帖子数，「全部收藏」不给数字——
+跨夹总数源站没提供，不能把各夹数相加（同一帖子可能同时属于多个夹）。
+
+写操作（取消收藏 / 收藏夹增删改）全是普通 POST 表单，不带 JS；
+结果由视图写进 messages 再跳回本页，后端的回跳地址走 forms 里的 next。
+{% endcomment %}
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+    {% include 'common_html/haijiao_user_bar.html' %}
+
+    <h1 class="mt-4 flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+        {% include 'common_html/haijiao_icon.html' with name='bookmark' class='h-6 w-6 shrink-0 opacity-70' %}
+        我的收藏
+    </h1>
+    {% include 'common_html/haijiao_me_nav.html' %}
+
+    <div class="xy-filter-options mt-4">
+        {% for folder in folder_links %}
+        <a href="{{ folder.href }}" class="xy-filter-pill {% if folder.active %}is-active{% endif %}"
+            {% if folder.active %}aria-current="true"{% endif %}>{{ folder.name }}{% if folder.count is not None %}（{{ folder.count }}）{% endif %}</a>
+        {% endfor %}
+    </div>
+
+    {% comment %}
+    收藏夹管理：默认收起（<details>），免得把筛选条撑得很长。
+    「重命名 / 删除」只对具体收藏夹出现 ——「全部收藏」是跨夹的虚拟档，没有实体可改。
+    {% endcomment %}
+    <details class="mt-3 rounded-box border border-base-300 bg-base-100 px-3 py-2">
+        <summary class="cursor-pointer text-xs text-base-content/70">管理收藏夹</summary>
+        <div class="mt-3 flex flex-wrap items-start gap-4">
+            <form method="post" action="/haijiao/action/favorite-folder.html" class="flex items-center gap-2">
+                <input type="hidden" name="action" value="add" />
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                {% include 'common_html/haijiao_icon.html' with name='folder' %}
+                <input type="text" name="folder_name" maxlength="12" required
+                    placeholder="新收藏夹名称（1-12 字）" class="input input-sm input-bordered w-52" />
+                <button type="submit" class="btn btn-sm btn-outline">新建</button>
+            </form>
+
+            {% if folder_id != '0' %}
+            <form method="post" action="/haijiao/action/favorite-folder.html" class="flex items-center gap-2">
+                <input type="hidden" name="action" value="rename" />
+                <input type="hidden" name="folder_id" value="{{ folder_id }}" />
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                {% include 'common_html/haijiao_icon.html' with name='pencil' %}
+                <input type="text" name="folder_name" maxlength="12" required
+                    value="{{ current_folder_name }}" class="input input-sm input-bordered w-52" />
+                <button type="submit" class="btn btn-sm btn-outline">重命名</button>
+            </form>
+            <form method="post" action="/haijiao/action/favorite-folder.html">
+                <input type="hidden" name="action" value="delete" />
+                <input type="hidden" name="folder_id" value="{{ folder_id }}" />
+                <input type="hidden" name="next" value="/haijiao/me/favorites.html" />
+                <button type="submit" class="btn btn-sm btn-outline btn-error gap-1.5">
+                    {% include 'common_html/haijiao_icon.html' with name='trash' %}
+                    删除收藏夹
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        <p class="mt-2 text-xs text-base-content/50">
+            名称限 1-12 字且不可重名；删除只对空夹生效（夹里还有帖子时源站会拒绝，先逐条取消收藏）。
+            另外：海角源站改完名或删掉夹子后<b>旧名字不会被释放</b>，用同名再建会报「已存在」。
+        </p>
+    </details>
+
+    {% if items %}
+    <div class="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        {% for item in items %}
+        <div>
+            {% include 'common_html/movie_card.html' with item=item detail_base='/haijiao/topic' show_stats=True %}
+            <form method="post" action="/haijiao/action/favorite.html" class="mt-1">
+                <input type="hidden" name="topic_id" value="{{ item.id }}" />
+                <input type="hidden" name="action" value="remove" />
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                <button type="submit" class="btn btn-ghost btn-xs w-full gap-1">
+                    {% include 'common_html/haijiao_icon.html' with name='trash' class='h-3 w-3 shrink-0' %}
+                    取消收藏
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% include 'common_html/pager.html' %}
+    {% else %}
+    <div class="mt-6 flex flex-col items-center gap-2 rounded-box border border-dashed border-base-300 py-10 text-center">
+        {% include 'common_html/haijiao_icon.html' with name='bookmark' class='h-8 w-8 opacity-30' %}
+        <p class="text-sm text-base-content/60">
+            {% if folder_id == '0' %}还没有收藏过帖子。{% else %}这个收藏夹里还没有帖子。{% endif %}
+        </p>
+        <p class="text-xs text-base-content/50">在帖子详情页选好收藏夹点「收藏」，帖子就会出现在这里。</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

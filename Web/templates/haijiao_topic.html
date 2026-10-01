@@ -1,0 +1,250 @@
+{% extends 'template.html' %}
+
+{% block title %}{{ detail.title }} - 海角社区 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}海角社区,{{ detail.title }},{{ SITE_NAME }}{% endblock %}
+{% block description %}{{ detail.title }} - 海角社区帖子，{{ SITE_BRAND }}匿名免登录浏览{% endblock %}
+{% block og_title %}{{ detail.title }} - 海角社区{% endblock %}
+{% block head %}
+{# 播放器样式只有本页需要（见末尾的 js 区块） #}
+{% if videos %}<link rel="stylesheet" href="/static/js/vendor/xgplayer.min.css" />{% endif %}
+{% endblock %}
+
+{% block content %}
+{% comment %}
+海角帖子详情页：
+    头部：标题 + 帖子数据（作者 / 时间 / 板块 / 阅读 / 评论，每项带图标）
+    标签：带「标签」文字说明 + 胶囊，避免一排没有来历的灰块
+    正文：源站 HTML，已在视图层把 <img src="混淆地址"> 改写为 /api/haijiao/image 完整 URL；
+          源站的付费门槛提示（.sell-btn）在 input.css 里做成了提示条样式
+    视频：在正文之下（帖子底部），用本站统一的西瓜播放器直接播（见文件末尾 js 区块）
+    评论：首屏先展示前 20 条（接口每页 20 条）
+
+配色一律走主题 token（text-base-content / bg-base-100 / border-base-300 …），
+深浅主题自动适配，不出现写死的黑白色值。
+
+媒体：正文图片与播放器统一「居中 + 等比缩放 + 主题描边」；正文区挂了
+data-zoom-group，点击图片会拉起全屏查看层（翻页/关闭逻辑见 static/js/common.js）。
+
+content 走 |safe 直接渲染：源站 HTML 在视图层已转义/替换，正文内 <script> 由 Django autoescape 过滤；
+若源站未来塞了恶意脚本，可考虑改用 bleach 清洗（不在本期范围）。
+{% endcomment %}
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+    {% include 'common_html/haijiao_user_bar.html' %}
+
+    <h1 class="mt-2 text-2xl font-bold sm:text-3xl">{{ detail.title }}</h1>
+
+    {# 帖子数据行：每项「图标 + 文字」，图标用 currentColor 跟随主题 #}
+    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-base-content/70">
+        <span class="flex min-w-0 items-center gap-1.5">
+            {% if author.avatar %}
+            <img src="{{ author.avatar }}" alt="" class="h-6 w-6 shrink-0 rounded-full border border-base-300 object-cover" />
+            {% else %}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0"
+                aria-hidden="true">
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M5 20a7 7 0 0 1 14 0" />
+            </svg>
+            {% endif %}
+            <span class="truncate font-medium text-base-content">{% if author.nickname %}{{ author.nickname }}{% else %}匿名用户{% endif %}</span>
+        </span>
+
+        {% if detail.create_time %}
+        <span class="flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0"
+                aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5.5l3.5 2" />
+            </svg>
+            <span>{{ detail.create_time }}</span>
+        </span>
+        {% endif %}
+
+        {% if detail.node and detail.node.name %}
+        <span class="flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0"
+                aria-hidden="true">
+                <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h7A1.5 1.5 0 0 1 19 10v6.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 16.5z" />
+            </svg>
+            <span>{{ detail.node.name }}</span>
+        </span>
+        {% endif %}
+
+        {% if detail.view_count %}
+        <span class="flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0"
+                aria-hidden="true">
+                <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+                <circle cx="12" cy="12" r="2.8" />
+            </svg>
+            <span>{{ detail.view_count }} 阅读</span>
+        </span>
+        {% endif %}
+
+        {% if detail.comment_count %}
+        <span class="flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0"
+                aria-hidden="true">
+                <path d="M20 12a7.5 7.5 0 0 1-11 6.7L5 20l1.3-3.8A7.5 7.5 0 1 1 20 12z" />
+            </svg>
+            <span>{{ detail.comment_count }} 评论</span>
+        </span>
+        {% endif %}
+    </div>
+
+    {% if tags %}
+    {# 标签：普通访客不知道一排灰块是什么，所以先给「标签」二字再列 #}
+    <div class="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+        <span class="flex items-center gap-1 text-base-content/60">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0"
+                aria-hidden="true">
+                <path d="M11 3H5a2 2 0 0 0-2 2v6l9.5 9.5a2 2 0 0 0 2.8 0l5.2-5.2a2 2 0 0 0 0-2.8z" />
+                <path d="M7.5 7.5h.01" />
+            </svg>
+            标签
+        </span>
+        {% for tag in tags %}
+        <span class="badge badge-ghost badge-sm">{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# 互动区：登录后是点赞 / 关注 / 打赏按钮，未登录给登录入口 #}
+    {% include 'common_html/haijiao_interactions.html' %}
+
+    {# data-zoom-group：正文图片点击放大（见 common.js） #}
+    <article class="xy-hj-content mt-6 text-sm leading-relaxed" data-zoom-group>
+        {{ content|safe }}
+    </article>
+
+    {% comment %}
+    视频：放在帖子底部，用本站统一的西瓜播放器直接播（与 555 播放页、短剧播放页同一套）。
+    data-src 指向本站自己的端点 /haijiao/play/<topic>/<aid>.html —— 它在服务端把源站 m3u8
+    里的假密钥还原成真密钥后原样吐出（Content-Type: application/vnd.apple.mpegurl）。
+    播放器脚本在本模板最末尾的 js 区块里，只有本页有视频时才加载。
+    {% endcomment %}
+    {% if videos %}
+    <div class="mt-6">
+        <h2 class="mb-3 flex items-center gap-2 text-lg font-bold">
+            <span class="inline-block h-5 w-1.5 rounded-full bg-primary"></span>视频{% if videos|length > 1 %}（{{ videos|length }}）{% endif %}
+        </h2>
+        {% for v in videos %}
+        <div class="{% if not forloop.first %}mt-4{% endif %}">
+            {% if videos|length > 1 %}
+            <p class="mb-1.5 text-xs text-base-content/60">视频 {{ forloop.counter }}</p>
+            {% endif %}
+            {# 播放器容器：宽高由 aspect-video 定好，播放器自己往里填 #}
+            <div id="xy-hj-player-{{ forloop.counter }}" class="aspect-video w-full overflow-hidden rounded-box bg-black"
+                data-hj-player data-src="/haijiao/play/{{ topic_id }}/{{ v.id }}.html" data-poster="{{ v.cover }}"></div>
+            <p class="mt-2 hidden text-sm text-error" data-hj-player-fail>
+                视频加载失败：该视频可能已失效，或当前浏览器不支持该格式。请稍后重试，或更换 Chrome / Edge / Safari 浏览器。
+            </p>
+        </div>
+        {% endfor %}
+        {# 手机端手势提示：只在窄屏显示（PC 上用不到手势） #}
+        <p class="mt-2 text-xs text-base-content/60 lg:hidden">左右滑动画面可调节进度</p>
+    </div>
+    {% endif %}
+
+    {# 评论 #}
+    <div class="mt-8">
+        <h2 class="mb-3 flex items-center gap-2 text-lg font-bold">
+            <span class="inline-block h-5 w-1.5 rounded-full bg-primary"></span>评论（{% if detail.comment_count %}{{ detail.comment_count }}{% else %}{{ comments|length }}{% endif %}）
+        </h2>
+        {% if comments %}
+        <ul class="space-y-3">
+            {% for c in comments %}
+            <li class="rounded-box border border-base-300 bg-base-100 p-3">
+                <div class="flex items-center gap-2 text-sm">
+                    {% if c.author and c.author.avatar %}
+                    <img src="{{ c.author.avatar }}" alt="" class="h-6 w-6 rounded-full border border-base-300 object-cover" />
+                    {% endif %}
+                    <span class="font-medium">{% if c.author and c.author.nickname %}{{ c.author.nickname }}{% else %}匿名{% endif %}</span>
+                    {% if c.create_time %}<span class="text-xs text-base-content/60">{{ c.create_time }}</span>{% endif %}
+                    {% if c.like_count %}
+                    <span class="ml-auto text-xs text-base-content/60">{{ c.like_count }} 赞</span>
+                    {% endif %}
+                </div>
+                <p class="mt-2 whitespace-pre-line text-sm text-base-content/90">{{ c.content }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-base-content/60">还没有评论。</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-8">
+        <a href="/haijiao/list.html" class="btn btn-ghost btn-sm">返回海角首页</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block js %}
+{% if videos %}
+{% comment %}
+播放器：西瓜播放器（与 555 播放页、短剧播放页同一套，本地文件见 Web/static/js/vendor/）。
+
+播放源是本站端点 /haijiao/play/<topic>/<aid>.html（见视图 haijiao_play）：它拿到的是
+源站 m3u8 文本、密钥已还原成真密钥，直接交给 HLS 插件即可；分片 CDN 实测
+Access-Control-Allow-Origin: *，跨域拉流没问题。
+
+这里一定是 m3u8，所以无条件挂 HLS 插件。**不能用 canPlayType 判断"浏览器原生支持 HLS"**
+—— 实测桌面 Chrome 对 'application/vnd.apple.mpegurl' 也返回 "maybe"，
+据此跳过插件会让 Firefox 这类浏览器彻底播不了。
+
+播放器容器由模板按视频数生成（data-hj-player），本脚本逐个建实例：
+一个帖子绝大多数只有 1 个附件，多于 1 个时就并排堆叠，不做选集切换。
+{% endcomment %}
+<script src="/static/js/vendor/xgplayer.min.js"></script>
+<script src="/static/js/vendor/xgplayer-hls.min.js"></script>
+<script>
+    (function () {
+        var boxes = document.querySelectorAll('[data-hj-player]');
+        if (!boxes.length || !window.Player) return;
+
+        function buildPlayer(box) {
+            var url = box.getAttribute('data-src') || '';
+            if (!url) return;
+            var fail = box.parentNode.querySelector('[data-hj-player-fail]');
+
+            var config = {
+                id: box.id,
+                url: url,
+                poster: box.getAttribute('data-poster') || '',
+                lang: 'zh-cn',
+                width: '100%',
+                height: '100%',
+                autoplay: false,
+                playsinline: true,      // 手机端不全屏接管，页面内播放
+                volume: 0.8,
+                // 键盘快捷键（播放器自身）：←/→ 快退快进、空格暂停、M 静音、F 全屏
+                keyboard: { seekStep: 10 },
+                // 手机端手势（mobile 插件，仅移动端注册）
+                mobile: {
+                    gestureX: true,     // 左右滑动调进度 + 时间预览
+                    gestureY: true,     // 右半边调音量、左半边调亮度
+                    pressRate: 2,       // 长按 2 倍速
+                    darkness: true,     // 左半边调暗（网页改不了系统亮度，用蒙层模拟）
+                },
+            };
+            if (window.HlsPlayer) config.plugins = [window.HlsPlayer];
+
+            var player = new window.Player(config);
+            // 播放源可能失效（凭据过期 / 403 / 网络不通），给出明确提示而不是静默空转
+            player.on('error', function () { if (fail) fail.classList.remove('hidden'); });
+        }
+
+        for (var i = 0; i < boxes.length; i++) {
+            buildPlayer(boxes[i]);
+        }
+    })();
+</script>
+{% endif %}
+{% endblock %}

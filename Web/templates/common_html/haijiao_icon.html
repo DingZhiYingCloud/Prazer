@@ -1,0 +1,83 @@
+{% comment %}
+海角社区图标（用户条 / 登录注册页 / 详情页互动区 / 个人中心导航与统计共用）
+一套图标：账号类（login / user-plus / user / logout）、
+导航与统计类（home / file / heart / comment / eye / bookmark / users / chart / coin / diamond）、
+状态与操作类（check / clock / x-circle / folder / pencil / trash）。
+
+为什么不复用 common_html/nav_icon.html：那个是侧边栏频道图标，尺寸与透明度
+写死在 include 里（h-5 w-5 opacity-70），这里要的是按钮/胶囊内的小图标且颜色跟随
+文字，硬套会把侧边栏那套样式一起带进来。
+
+用法：
+    {% include 'common_html/haijiao_icon.html' with name='login' %}
+    {% include 'common_html/haijiao_icon.html' with name='eye' class='h-3.5 w-3.5' %}
+不传 class 时默认 h-4 w-4 shrink-0。
+{% endcomment %}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+    stroke-linecap="round" stroke-linejoin="round" class="{{ class|default:'h-4 w-4 shrink-0' }}" aria-hidden="true">
+    {% if name == 'login' %}
+    <path d="M15 3h3.5A1.5 1.5 0 0 1 20 4.5v15a1.5 1.5 0 0 1-1.5 1.5H15" />
+    <path d="m10 16 4-4-4-4" />
+    <path d="M14 12H3" />
+    {% elif name == 'user-plus' %}
+    <path d="M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="8.5" cy="7" r="4" />
+    <path d="M19 8v6M22 11h-6" />
+    {% elif name == 'user' %}
+    <circle cx="12" cy="8" r="3.5" />
+    <path d="M5 20a7 7 0 0 1 14 0" />
+    {% elif name == 'logout' %}
+    <path d="M9 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H9" />
+    <path d="m16 16 4-4-4-4" />
+    <path d="M20 12H9" />
+    {% elif name == 'home' %}
+    <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />
+    {% elif name == 'chart' %}
+    <path d="M4 20V4" />
+    <path d="M4 20h16" />
+    <path d="M9 16v-4M14 16V8M19 16v-6" />
+    {% elif name == 'check' %}
+    <circle cx="12" cy="12" r="9" />
+    <path d="m8 12.5 2.5 2.5L16 9.5" />
+    {% elif name == 'bookmark' %}
+    <path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V4.5a1 1 0 0 1 1-1z" />
+    {% elif name == 'folder' %}
+    <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4l2 2.5h7A1.5 1.5 0 0 1 19 9v8.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 17.5z" />
+    {% elif name == 'pencil' %}
+    <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z" />
+    <path d="M13.5 6.5 17.5 10.5" />
+    {% elif name == 'trash' %}
+    <path d="M4 7h16" />
+    <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" />
+    <path d="M6.5 7 7.5 20a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1L17.5 7" />
+    {% elif name == 'eye' %}
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+    <circle cx="12" cy="12" r="3" />
+    {% elif name == 'heart' %}
+    <path d="M12 20.5s-7.5-4.6-7.5-9.6a4.3 4.3 0 0 1 7.5-2.9 4.3 4.3 0 0 1 7.5 2.9c0 5-7.5 9.6-7.5 9.6z" />
+    {% elif name == 'comment' %}
+    <path d="M20.5 12a8.5 8.5 0 0 1-8.5 8.5 8.6 8.6 0 0 1-3.6-.8L3.5 21l1.3-4.8A8.5 8.5 0 1 1 20.5 12z" />
+    {% elif name == 'file' %}
+    <path d="M13.5 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10A1.5 1.5 0 0 0 18.5 19V8.5z" />
+    <path d="M13.5 3.5V8.5h5" />
+    <path d="M9 12.5h6M9 16h6" />
+    {% elif name == 'users' %}
+    <path d="M16 21v-1.8a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V21" />
+    <circle cx="9" cy="7.5" r="3.5" />
+    <path d="M22 21v-1.8a4 4 0 0 0-3-3.9" />
+    <path d="M16 4.3a4 4 0 0 1 0 7.4" />
+    {% elif name == 'clock' %}
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" />
+    {% elif name == 'x-circle' %}
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="m9.5 9.5 5 5M14.5 9.5l-5 5" />
+    {% elif name == 'coin' %}
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="4" />
+    {% elif name == 'diamond' %}
+    <path d="M7 3.5h10l3.5 5.5-8.5 11.5L3.5 9z" />
+    <path d="M3.5 9h17" />
+    <path d="M8 3.5 12 20.5M16 3.5 12 20.5" />
+    {% endif %}
+</svg>

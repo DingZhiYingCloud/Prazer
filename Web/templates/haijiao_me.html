@@ -1,0 +1,133 @@
+{% extends 'template.html' %}
+
+{% block title %}个人中心 - 海角社区 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block description %}海角社区个人中心：账号资料、金币钻石余额、我的帖子、我点赞的、我的收藏、关注与粉丝。{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+{% comment %}
+个人中心首页：账号资料 + 余额 + 签到入口。
+登录态来自会话（见 Web/services/haijiao_auth.py），token 不进用户 cookie。
+info / wealth 由视图用 user/info + user/wealth 取；两个都取不到才提示"可能已失效"，
+不自动清会话 —— 可能只是接口抖了一下，不该把人踢下线。
+{% endcomment %}
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+    {% include 'common_html/haijiao_user_bar.html' %}
+
+    <h1 class="mt-4 flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+        {% include 'common_html/haijiao_icon.html' with name='user' class='h-6 w-6 shrink-0 opacity-70' %}
+        个人中心
+    </h1>
+    {% include 'common_html/haijiao_me_nav.html' %}
+
+    {% if expired %}
+    <div class="alert alert-warning mt-4 text-sm">
+        <span>
+            登录状态可能已失效（取不到账号资料）。
+            <a class="link" href="/haijiao/login.html?next=/haijiao/me.html">重新登录</a>
+        </span>
+    </div>
+    {% endif %}
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-3">
+        <div class="rounded-box border border-base-300 bg-base-100 p-4 lg:col-span-2">
+            {% if info %}
+            <div class="flex items-center gap-4">
+                <img src="{% if info.avatar %}{{ info.avatar }}{% else %}/media/placeholder.png{% endif %}" alt=""
+                    class="h-16 w-16 shrink-0 rounded-full border border-base-300 bg-base-200 object-cover" />
+                <div class="min-w-0">
+                    <p class="truncate text-lg font-bold">{{ info.nickname }}</p>
+                    <p class="mt-0.5 text-xs text-base-content/60">
+                        用户 ID {{ info.user_id }}{% if account.username %} · 账号 {{ account.username }}{% endif %}
+                    </p>
+                </div>
+            </div>
+            {% if info.description %}
+            <p class="mt-3 whitespace-pre-line text-sm text-base-content/70">{{ info.description }}</p>
+            {% endif %}
+            <dl class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div class="rounded-box bg-base-200 px-3 py-2">
+                    <dt class="flex items-center gap-1 text-xs text-base-content/60">
+                        {% include 'common_html/haijiao_icon.html' with name='file' class='h-3.5 w-3.5 shrink-0' %}
+                        帖子
+                    </dt>
+                    <dd class="text-lg font-bold">{{ info.topic_count }}</dd>
+                </div>
+                <div class="rounded-box bg-base-200 px-3 py-2">
+                    <dt class="flex items-center gap-1 text-xs text-base-content/60">
+                        {% include 'common_html/haijiao_icon.html' with name='users' class='h-3.5 w-3.5 shrink-0' %}
+                        粉丝
+                    </dt>
+                    <dd class="text-lg font-bold">{{ info.fans_count }}</dd>
+                </div>
+                <div class="rounded-box bg-base-200 px-3 py-2">
+                    <dt class="flex items-center gap-1 text-xs text-base-content/60">
+                        {% include 'common_html/haijiao_icon.html' with name='heart' class='h-3.5 w-3.5 shrink-0' %}
+                        获赞
+                    </dt>
+                    <dd class="text-lg font-bold">{{ info.like_count }}</dd>
+                </div>
+                <div class="rounded-box bg-base-200 px-3 py-2">
+                    <dt class="flex items-center gap-1 text-xs text-base-content/60">
+                        {% include 'common_html/haijiao_icon.html' with name='comment' class='h-3.5 w-3.5 shrink-0' %}
+                        评论
+                    </dt>
+                    <dd class="text-lg font-bold">{{ info.comment_count }}</dd>
+                </div>
+            </dl>
+            {% else %}
+            <p class="text-sm text-base-content/60">暂时取不到账号资料，稍后刷新试试。</p>
+            {% endif %}
+        </div>
+
+        <div class="rounded-box border border-base-300 bg-base-100 p-4">
+            <h2 class="text-sm font-bold">我的余额</h2>
+            <div class="mt-3 grid grid-cols-2 gap-2">
+                <div class="rounded-box bg-base-200 px-3 py-2">
+                    <p class="flex items-center gap-1 text-xs text-base-content/60">
+                        {% include 'common_html/haijiao_icon.html' with name='coin' class='h-3.5 w-3.5 shrink-0' %}
+                        金币
+                    </p>
+                    <p class="text-lg font-bold">{{ wealth.gold|default:0 }}</p>
+                </div>
+                <div class="rounded-box bg-base-200 px-3 py-2">
+                    <p class="flex items-center gap-1 text-xs text-base-content/60">
+                        {% include 'common_html/haijiao_icon.html' with name='diamond' class='h-3.5 w-3.5 shrink-0' %}
+                        钻石
+                    </p>
+                    <p class="text-lg font-bold">{{ wealth.diamond|default:0 }}</p>
+                </div>
+            </div>
+            <form method="post" action="/haijiao/action/sign-in.html" class="mt-3">
+                <button type="submit" class="btn btn-primary btn-sm w-full">每日签到</button>
+            </form>
+            <p class="mt-2 text-xs text-base-content/60">签到每天可领 20 金币，重复点击不会重复发放。</p>
+            <a href="/haijiao/me/wealth.html" class="link link-hover mt-2 inline-block text-xs">查看金币流水</a>
+        </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+        <a href="/haijiao/me/topics.html" class="btn btn-ghost btn-sm gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='file' %}
+            我的帖子
+        </a>
+        <a href="/haijiao/me/liked.html" class="btn btn-ghost btn-sm gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='heart' %}
+            我点赞的
+        </a>
+        <a href="/haijiao/me/favorites.html" class="btn btn-ghost btn-sm gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='bookmark' %}
+            我的收藏
+        </a>
+        <a href="/haijiao/me/following.html" class="btn btn-ghost btn-sm gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='user-plus' %}
+            我关注的人
+        </a>
+        <a href="/haijiao/me/fans.html" class="btn btn-ghost btn-sm gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='users' %}
+            我的粉丝
+        </a>
+    </div>
+</section>
+{% endblock %}

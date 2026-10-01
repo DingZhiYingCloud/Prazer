@@ -1,0 +1,24 @@
+{% comment %}
+短剧专用搜索框（短剧列表页与短剧搜索页共用）。
+
+为什么不用页头那个搜索框：页头搜索走 555 电影线路，短剧走红果线路，
+两边是**两套完全不同的数据源、两套详情地址**，共用一个框会让人分不清在搜哪种内容。
+所以短剧单独开一个，只搜短剧。
+
+用普通 GET 表单、不依赖 JS：提交后得到 /drama/search.html?kw=关键词。
+关键词走查询参数而不是路径段 —— 用户任意输入，含斜杠时路径式会产生歧义。
+
+keyword 由页面上下文带入时回填到输入框（搜索页用）；列表页没有这个变量，即为空。
+{% endcomment %}
+<form class="mt-3 flex items-center gap-2" method="get" action="/drama/search.html" autocomplete="off" role="search">
+    <label class="input input-sm w-full items-center gap-2 sm:max-w-md">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0 opacity-50" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.2-3.2" />
+        </svg>
+        <input type="text" name="kw" value="{{ keyword }}" class="grow" placeholder="搜短剧（如：逆袭、总裁）"
+            autocomplete="off" maxlength="50" aria-label="搜索短剧" />
+    </label>
+    <button type="submit" class="btn btn-primary btn-sm shrink-0">搜短剧</button>
+</form>

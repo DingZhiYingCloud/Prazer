@@ -1,0 +1,58 @@
+{% extends 'template.html' %}
+
+{% block title %}搜索「{{ keyword }}」- 海角社区 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}海角社区搜索,{{ keyword }},{{ SITE_NAME }}{% endblock %}
+{% block description %}海角社区关键词「{{ keyword }}」的搜索结果{% endblock %}
+{% block og_title %}搜索「{{ keyword }}」- 海角社区{% endblock %}
+{# 搜索结果页本身不收录（结果会随源站变动） #}
+{% block robots %}noindex, follow{% endblock %}
+
+{% block content %}
+{% comment %}
+海角搜索结果：URL 用查询参数 /haijiao/search.html?key=xxx，关键词可任意输入。
+分页同样用查询参数 ?page=N（源站搜索结果可达数百页）。
+{% endcomment %}
+{# 关键词交给 common.js 做标题高亮（与站内其它搜索页同一套机制，没有关键词时是空操作） #}
+<span data-hl-source="{{ keyword }}" hidden></span>
+
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+    {% include 'common_html/haijiao_user_bar.html' %}
+
+    <div class="mt-2">
+        <h1 class="text-2xl font-bold sm:text-3xl">搜索「{{ keyword }}」</h1>
+        {% if items %}
+        <p class="mt-1 text-sm opacity-60">
+            第 {{ page }} 页{% if total_pages > 1 %}，共 {{ total_pages }} 页{% endif %}
+        </p>
+        {% endif %}
+    </div>
+
+    {# 搜索框（共用一个控件）：保留旧关键词便于改词重搜 #}
+    {% include 'common_html/haijiao_search_box.html' %}
+
+    {% if items %}
+    <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        {% for item in items %}
+        {% include 'common_html/movie_card.html' with item=item detail_base='/haijiao/topic' %}
+        {% endfor %}
+    </div>
+    {% include 'common_html/pager.html' %}
+    {% else %}
+    <div class="mt-10 flex flex-col items-center gap-3 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12 opacity-30"
+            aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+        </svg>
+        {% if page > 1 %}
+        <p class="text-sm opacity-60">这一页没有内容了，往前翻翻看。</p>
+        {% else %}
+        <p class="text-sm opacity-60">没找到与「{{ keyword }}」相关的帖子。</p>
+        {% endif %}
+        <a href="/haijiao/list.html" class="btn btn-primary btn-sm">回到海角首页</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

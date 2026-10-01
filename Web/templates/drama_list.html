@@ -1,0 +1,117 @@
+{% extends 'template.html' %}
+
+{# 分页第 2 页起标题/描述带页码：与 555 列表页同理，避免每页头尾文案完全一样被判成重复内容页 #}
+{% block title %}{{ type_name }}{% if page > 1 %} - 第 {{ page }} 页{% endif %} - 免费在线短剧 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}短剧,红果短剧,{{ type_name }},免费短剧,在线短剧,{{ SITE_NAME }}{% endblock %}
+{% block description %}{{ page_intro }}{% if page > 1 %}（第 {{ page }} 页）{% endif %}，{{ SITE_BRAND }}免注册、免登录即可在线观看。{% endblock %}
+{% block og_title %}{{ type_name }}{% if page > 1 %} - 第 {{ page }} 页{% endif %}{% endblock %}
+{# 空数据页（接口异常）不收录 #}
+{% block robots %}{% if empty %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
+
+{% block content %}
+{% comment %}
+短剧专区：数据来自小影 API 的红果短剧线路（见 API/apis/drama.py）。
+两行筛选（一级分类 / 题材）都是普通链接，可分享可后退，不依赖 JS。
+分类是两级的：一级是内容形态（真人剧 / 漫剧 / AI剧 / 漫画），二级是题材。
+题材行只渲染**当前所属一级**的题材（全部平铺会有 40 个胶囊，且剧情/玄幻/奇幻/科幻
+这些题材名在多个一级下重复，混在一起分不清归属）。
+{% endcomment %}
+<section class="mx-auto w-full max-w-7xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+
+    <div class="mt-2 flex flex-wrap items-end justify-between gap-2">
+        <h1 class="text-2xl font-bold sm:text-3xl">{{ type_name }}</h1>
+        <span class="text-sm opacity-60">共 {{ total_pages }} 页</span>
+    </div>
+    <p class="mt-1 text-sm opacity-60">{{ page_intro }}</p>
+
+    {# 短剧专用搜索框：只搜红果短剧线路，与页头的影视搜索互不相干（见 drama_search_box.html） #}
+    {% include 'common_html/drama_search_box.html' %}
+
+    {# 频道切换：沿用列表页的「标签列 + 胶囊选项」版式（样式见 input.css） #}
+    <div class="xy-filter-bar sticky top-[calc(4rem+1px)] z-20 -mx-4 mt-3 border-b border-base-300 bg-base-100/95 px-4 py-3 backdrop-blur">
+        {% if top_links %}
+        <div class="xy-filter-group">
+            <span class="xy-filter-label">分类</span>
+            <div class="xy-filter-options">
+                {% for link in top_links %}
+                <a href="{{ link.href }}" class="xy-filter-pill {% if link.active %}is-active{% endif %}"
+                    {% if link.active %}aria-current="true"{% endif %}>{{ link.label }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if tag_links %}
+        {% comment %}
+        题材行按视口分两套容器（同一份 tag_links，DOM 里会渲染两遍，这是有意的）：
+        <details> 的展开态没法按视口切换，而"宽屏平铺、窄屏折叠"必须同时成立，
+        所以宽屏用一个只在大屏显示的容器直接平铺，窄屏用 list.html 那套
+        「更多筛选」折叠面板（展开时 input.css 的 :has 规则会自动取消吸顶）。
+
+        响应式类名挂在普通 <div> 上而不是 .xy-filter-group 上：后者在 input.css 里
+        是未分层的 display:grid，优先级高于 Tailwind 的 utilities，挂 hidden 会被它盖掉。
+        {% endcomment %}
+        <div class="hidden lg:block">
+            <div class="xy-filter-group mt-1.5">
+                <span class="xy-filter-label">题材</span>
+                <div class="xy-filter-options">
+                    {% for link in tag_links %}
+                    <a href="{{ link.href }}" class="xy-filter-pill {% if link.active %}is-active{% endif %}"
+                        {% if link.active %}aria-current="true"{% endif %}>{{ link.label }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <details class="xy-filter-more lg:hidden" {% if tag_active_label %}open{% endif %}>
+            <summary class="flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-2.5">
+                <span class="xy-filter-toggle btn btn-ghost btn-xs gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true">
+                        <path d="M3 6h18M7 12h10M11 18h2" />
+                    </svg>
+                    更多题材
+                </span>
+                {% if tag_active_label %}
+                <span class="text-xs opacity-60">已选：{{ tag_active_label }}</span>
+                {% endif %}
+            </summary>
+
+            {# max-h + 可滚动：真人剧题材有 24 项，不让面板撑到一整屏 #}
+            <div class="xy-filter-panel">
+                <div class="xy-filter-group">
+                    <span class="xy-filter-label">题材</span>
+                    <div class="xy-filter-options">
+                        {% for link in tag_links %}
+                        <a href="{{ link.href }}" class="xy-filter-pill {% if link.active %}is-active{% endif %}"
+                            {% if link.active %}aria-current="true"{% endif %}>{{ link.label }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </details>
+        {% endif %}
+    </div>
+
+    {% if items %}
+    <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        {% for item in items %}
+        {% include 'common_html/movie_card.html' with item=item detail_base='/drama/detail' %}
+        {% endfor %}
+    </div>
+    {% include 'common_html/pager.html' %}
+    {% else %}
+    <div class="mt-10 flex flex-col items-center gap-3 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12 opacity-30"
+            aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="3" />
+            <path d="M7 4v16M17 4v16" />
+        </svg>
+        <p class="text-sm opacity-60">这个频道暂时取不到短剧数据，稍后刷新试试。</p>
+        <a href="/list/125.html" class="btn btn-primary btn-sm">回到短剧首页</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

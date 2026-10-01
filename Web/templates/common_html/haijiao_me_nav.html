@@ -1,0 +1,15 @@
+{% comment %}
+个人中心的分区导航（各个人中心页面共用）。
+me_links / me_nav 由 Web/views/haijiao_account.py 的 _me_context() 提供
+（每条含 icon 键，图标见 common_html/haijiao_icon.html），
+当前项用 is-active 高亮，与频道内的胶囊样式一致。
+{% endcomment %}
+<div class="xy-filter-options mt-3">
+    {% for link in me_links %}
+    <a href="{{ link.href }}" class="xy-filter-pill gap-1.5 {% if link.key == me_nav %}is-active{% endif %}"
+        {% if link.key == me_nav %}aria-current="true"{% endif %}>
+        {% include 'common_html/haijiao_icon.html' with name=link.icon class='h-3.5 w-3.5 shrink-0' %}
+        {{ link.label }}
+    </a>
+    {% endfor %}
+</div>

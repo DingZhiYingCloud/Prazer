@@ -9,6 +9,18 @@ href 为 None 表示这一格不可点（已到首/尾页，或只是省略号�
 """
 
 
+def positive_int(value, default=1):
+    """把 URL / 接口给的数字收敛成 >=1 的整数（非法值退回 default）
+
+    页码、总页数、总条数这类"最小应为 1"的数字都用它：
+    访客可以手改 ?page=abc 或 ?page=-1，接口也可能给空值，不能直接 int()。
+    """
+    try:
+        return max(1, int(value or default))
+    except (TypeError, ValueError):
+        return default
+
+
 def build(page, total_pages, url_for):
     """生成分页链接
 

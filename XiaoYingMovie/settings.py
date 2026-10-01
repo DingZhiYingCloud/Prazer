@@ -2,7 +2,14 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# 读取 .env 作为配置来源。
+# override=True：让 .env 里的值**覆盖**同名的已存在环境变量。
+# 默认行为（override=False）是"环境变量优先"，于是 shell / IDE 注入的同名变量会静默盖掉 .env，
+# 出现"明明改了 .env 却不生效"的现象。本项目把 .env 当作唯一配置入口
+# （见 .env 里"切线上/本地只改这一处"），所以要让它说了算。
+# 代价：.env 里出现过的键，环境变量就再也盖不动它 —— 部署时别再用系统环境变量配这些项，
+# 并确保服务器的 .env 没留着开发期的值（尤其是 DEBUG）。
+load_dotenv(override=True)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -155,6 +162,16 @@ SITE_CONTACT_WECHAT = os.getenv('SITE_CONTACT_WECHAT', '')
 SITE_CONTACT_TG = os.getenv('SITE_CONTACT_TG', '')
 
 
+# ============ 问题反馈中心（小影统一反馈系统，子项目零代码接入）============
+# 反馈页托管在小影 API 侧：{XIAOYING_API_BASE}/feedback/<APPID>/。
+# 这里填本站在小影「接入项目」里的 APPID —— 反馈数据按它归属到本项目；
+# 页脚「开发者联系方式」弹窗也用同一个 APPID 去查（免签名接口）。
+# 本站没有登录体系，用户以游客身份匿名提交；有登录态的项目可再换一次性票据带上身份。
+# 详见 Web/services/feedback.py 顶部的接入说明。
+XIAOYING_FEEDBACK_APP_ID = os.getenv('XIAOYING_FEEDBACK_APP_ID',
+                                     'app_69ac08a215fe38ed28e952fba38e')
+
+
 # ============ 缓存配置（小影 API 数据缓存，只缓存不落库） ============
 # 说明：影片数据统一缓存到本地文件（零依赖，不写数据库）。
 # 命中缓存直接返回，未命中才请求小影 API，避免每个访客都回源。
@@ -172,7 +189,28 @@ CACHES = {
             'CULL_FREQUENCY': 4,
         },
     },
+    # 海角社区登录态专用缓存（见 SESSION_ENGINE）。
+    # 必须与上面的接口结果缓存分开：结果是"满了随机淘汰 1/4"，共用的话
+    # 某次缓存爆量会把访客的登录态一起淘汰掉（表现为莫名其妙掉登录）。
+    'sessions': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'cache', 'sessions'),
+        'OPTIONS': {
+            'MAX_ENTRIES': 20000,
+            'CULL_FREQUENCY': 4,
+        },
+    },
 }
+
+# ============ 海角社区登录态 ============
+# 只服务 /haijiao/ 频道（站内其它频道没有登录概念，不受影响）。
+# 会话存服务端（cache session），浏览器只拿 sessionid，
+# 海角 token 不会出现在用户 cookie 里；也不落库（本站对海角账号只做转交，不存密码、不建模型）。
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'sessions'
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14      # 两周
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'             # 跨站表单 POST 不带 cookie（CSRF 兜底，见 MIDDLEWARE 说明）
 
 # ============ 小影电影接口缓存时长 ============
 # 数据类（分类/首页/列表/详情）缓存较久，播放地址（m3u8 带时效）较短，

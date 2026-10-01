@@ -64,7 +64,7 @@
     <!-- 全站样式：output.css 由 input.css 编译产出（Tailwind CSS + daisyUI），模板新增类名后需重编译 -->
     <link rel="stylesheet" href="/static/css/output.css?v={{ STATIC_VERSION }}" />
     {# JS 也带版本号（与 output.css 同理），改动脚本后手动 +1，避免浏览器继续用缓存里的旧脚本 #}
-    <script src="/static/js/common.js?v=5" defer></script>
+    <script src="/static/js/common.js?v=7" defer></script>
 
     {% block head %}{% endblock %}
 </head>
@@ -80,6 +80,20 @@
 
         <div class="drawer-content flex min-h-screen flex-col">
             {% include 'common_html/headers.html' %}
+            {% comment %}
+            操作结果提示（海角社区的签到 / 点赞 / 关注 / 打赏等写操作，POST-Redirect-GET 后落地）：
+            只在真的有 messages 时渲染，其余页面/频道零输出，不引入任何全局行为。
+            由 common.js 在几秒后移除，避免长期遮住右上角。
+            {% endcomment %}
+            {% if messages %}
+            <div class="toast toast-top toast-end z-[9999] mt-20" id="xy-messages">
+                {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} text-sm shadow-lg">
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             <main class="flex-1">{% block content %}{% endblock %}</main>
             {% include 'common_html/footer.html' %}
         </div>

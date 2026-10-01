@@ -1,0 +1,53 @@
+{% comment %}
+海角频道的账号条：只在 /haijiao/ 页面出现。
+
+为什么不放进全站页头/侧边栏：站内其它频道（555 影视、红果短剧）没有登录概念，
+账号入口只属于海角社区这条线路，放全局会污染其它频道。
+
+未登录时「登录 / 注册」是这一栏的主角，所以用实心 + 描边两个按钮（而不是文字链），
+并各配一个图标，让入口一眼可见。
+
+account 由视图传入（见 Web/services/haijiao_auth.py 的 current()）。
+{% endcomment %}
+<div class="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-box border border-base-300 bg-base-100 px-3 py-2.5 text-sm">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <a href="/haijiao/list.html" class="link link-hover flex items-center gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='home' %}
+            海角首页
+        </a>
+        <a href="/haijiao/ranking.html" class="link link-hover flex items-center gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='chart' %}
+            排行榜
+        </a>
+    </div>
+
+    {% if account %}
+    <div class="flex flex-wrap items-center gap-2">
+        <span class="flex items-center gap-1.5 text-base-content/60">
+            {% include 'common_html/haijiao_icon.html' with name='user' %}
+            <span class="max-w-[10rem] truncate font-medium text-base-content">{{ account.nickname|default:account.username }}</span>
+        </span>
+        <a href="/haijiao/me.html" class="btn btn-primary btn-sm gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='user' %}
+            个人中心
+        </a>
+        <form method="post" action="/haijiao/logout.html">
+            <button type="submit" class="btn btn-ghost btn-sm gap-1.5">
+                {% include 'common_html/haijiao_icon.html' with name='logout' %}
+                退出
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="flex flex-wrap items-center gap-2">
+        <a href="/haijiao/login.html" class="btn btn-primary btn-sm gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='login' %}
+            登录
+        </a>
+        <a href="/haijiao/register.html" class="btn btn-outline btn-sm gap-1.5">
+            {% include 'common_html/haijiao_icon.html' with name='user-plus' %}
+            注册海角账号
+        </a>
+    </div>
+    {% endif %}
+</div>

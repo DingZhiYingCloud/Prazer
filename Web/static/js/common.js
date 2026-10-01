@@ -162,6 +162,134 @@ document.addEventListener('DOMContentLoaded', function () {
     update();
 });
 
+/* ============ 图片放大（帖子正文） ============
+ * 只对挂了 [data-zoom-group] 的容器生效（目前是海角社区帖子正文），
+ * 其它页面既不建 DOM 也不挂监听，零开销。
+ *
+ * 交互：点图片打开全屏查看层；「上一张 / 下一张」首尾循环；Esc 或点图片外空白关闭。
+ * 键盘：图片可 Tab 聚焦，回车/空格打开。
+ * 与站内其它交互一致：不做入场动画，点开即出现（样式见 input.css 的 #xy-lightbox）。
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    var groups = document.querySelectorAll('[data-zoom-group]');
+    var images = [];
+    for (var g = 0; g < groups.length; g++) {
+        var found = groups[g].querySelectorAll('img');
+        for (var i = 0; i < found.length; i++) images.push(found[i]);
+    }
+    if (!images.length) return;
+
+    var box = null;
+    var stage = null;
+    var picture = null;
+    var counter = null;
+    var actions = null;
+    var current = 0;
+    var opener = null;
+
+    var ICON = 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"' +
+        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"';
+
+    function build() {
+        box = document.createElement('div');
+        box.id = 'xy-lightbox';
+        box.hidden = true;
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-modal', 'true');
+        box.setAttribute('aria-label', '图片查看');
+        box.innerHTML =
+            '<div class="xy-lb-bar">' +
+                '<span class="xy-lb-count text-sm text-base-content/70"></span>' +
+                '<button type="button" class="btn btn-ghost btn-sm btn-circle" data-lb="close" aria-label="关闭">' +
+                    '<svg ' + ICON + '><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+                '</button>' +
+            '</div>' +
+            '<div class="xy-lb-stage"><img class="xy-lb-img" alt="" /></div>' +
+            '<div class="xy-lb-actions">' +
+                '<button type="button" class="btn btn-sm" data-lb="prev">' +
+                    '<svg ' + ICON + '><path d="m15 18-6-6 6-6"/></svg>上一张</button>' +
+                '<button type="button" class="btn btn-sm" data-lb="next">下一张' +
+                    '<svg ' + ICON + '><path d="m9 18 6-6-6-6"/></svg></button>' +
+            '</div>';
+        document.body.appendChild(box);
+
+        stage = box.querySelector('.xy-lb-stage');
+        picture = box.querySelector('.xy-lb-img');
+        counter = box.querySelector('.xy-lb-count');
+        actions = box.querySelector('.xy-lb-actions');
+        box.addEventListener('click', onClick);
+    }
+
+    function show(index) {
+        // 取模实现首尾循环：最后一张点"下一张"回到第一张
+        current = (index + images.length) % images.length;
+        picture.src = images[current].src;
+        picture.alt = images[current].alt || '';
+        counter.textContent = (current + 1) + ' / ' + images.length;
+        actions.hidden = images.length < 2;
+    }
+
+    function open(index, trigger) {
+        if (!box) build();
+        opener = trigger || null;
+        show(index);
+        box.hidden = false;
+        document.body.style.overflow = 'hidden';
+        var closeBtn = box.querySelector('[data-lb="close"]');
+        if (closeBtn) closeBtn.focus();
+    }
+
+    function close() {
+        box.hidden = true;
+        document.body.style.overflow = '';
+        if (opener && opener.focus) opener.focus();
+    }
+
+    function onClick(event) {
+        var btn = event.target.closest ? event.target.closest('[data-lb]') : null;
+        if (!btn) {
+            // 点图片本身不关，点图片外的舞台空白才关
+            if (event.target === stage) close();
+            return;
+        }
+        var action = btn.getAttribute('data-lb');
+        if (action === 'close') close();
+        else if (action === 'prev') show(current - 1);
+        else if (action === 'next') show(current + 1);
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (!box || box.hidden) return;
+        if (event.key === 'Escape') close();
+        else if (event.key === 'ArrowLeft') show(current - 1);
+        else if (event.key === 'ArrowRight') show(current + 1);
+    });
+
+    for (var k = 0; k < images.length; k++) {
+        (function (img, index) {
+            img.setAttribute('tabindex', '0');
+            img.addEventListener('click', function () { open(index, img); });
+            img.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    open(index, img);
+                }
+            });
+        })(images[k], k);
+    }
+});
+
+/* ============ 操作结果提示自动移除 ============
+ * 海角社区的写操作（签到 / 点赞 / 关注 / 打赏）走 POST-Redirect-GET，落地页会带一条提示
+ * （服务端渲染的 #xy-messages）。这里几秒后把它摘掉，免得长期遮住右上角内容。
+ * 与 bzToast 一致：直接移除，不做淡出动画。
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    var box = document.getElementById('xy-messages');
+    if (!box) return;
+    window.setTimeout(function () { box.remove(); }, 4000);
+});
+
 /* ============ 顶部进度条：切换页面 / 提交搜索时的等待反馈 ============
  * 服务端渲染站点，点链接后要等新文档返回，这段时间页面毫无反馈。
  * 这里在点链接 / 提交表单时拉出顶部进度条，新页面一渲染出来它就没了。

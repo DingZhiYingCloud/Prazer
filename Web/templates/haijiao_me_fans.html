@@ -1,0 +1,35 @@
+{% extends 'template.html' %}
+
+{% block title %}我的粉丝 - 个人中心 - 海角社区 - {{ SITE_NAME_ALT }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+{% comment %}
+我的粉丝：分页（源站每页 20 条），名片结构与「我关注的人」共用同一个 include。
+{% endcomment %}
+<section class="mx-auto w-full max-w-4xl px-4 py-6">
+    {% include 'common_html/breadcrumbs.html' %}
+    {% include 'common_html/haijiao_user_bar.html' %}
+
+    <h1 class="mt-4 flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+        {% include 'common_html/haijiao_icon.html' with name='users' class='h-6 w-6 shrink-0 opacity-70' %}
+        我的粉丝
+    </h1>
+    {% include 'common_html/haijiao_me_nav.html' %}
+
+    {% if rows %}
+    <ul class="mt-4 grid gap-2 sm:grid-cols-2">
+        {% for item in rows %}
+        {% include 'common_html/haijiao_user_card.html' %}
+        {% endfor %}
+    </ul>
+    {% include 'common_html/pager.html' %}
+    {% else %}
+    <div class="mt-6 flex flex-col items-center gap-2 rounded-box border border-dashed border-base-300 py-10 text-center">
+        {% include 'common_html/haijiao_icon.html' with name='users' class='h-8 w-8 opacity-30' %}
+        <p class="text-sm text-base-content/60">还没有粉丝。</p>
+        <a href="/haijiao/list.html" class="link link-hover text-sm text-primary">去海角社区发帖涨粉</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
