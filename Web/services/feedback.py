@@ -13,13 +13,11 @@
 友情链接 —— 直连反馈页的外链会被它劫持。走本地路由再由视图 302 跳转，既绕开中间件，
 地址也更干净。
 """
-from django.conf import settings
-
-from API.common.signature import API_BASE
+from API.common.signature import API_BASE, APP_ID
 
 # 本项目在小影「接入项目」里的 APPID（决定反馈数据归属哪个项目）
-# 取值见 settings.XIAOYING_FEEDBACK_APP_ID（最终来源为 .env）
-FEEDBACK_APP_ID = settings.XIAOYING_FEEDBACK_APP_ID
+# 与签名共用同一个值（XIAOYING_API_APPID，见 .env），不再单独配置
+FEEDBACK_APP_ID = APP_ID
 
 # 反馈页地址前缀（与 API 同源：切线上 / 本地只改 .env 的 XIAOYING_API_BASE）
 FEEDBACK_BASE = API_BASE

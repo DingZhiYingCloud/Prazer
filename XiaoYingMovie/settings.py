@@ -164,12 +164,10 @@ SITE_CONTACT_TG = os.getenv('SITE_CONTACT_TG', '')
 
 # ============ 问题反馈中心（小影统一反馈系统，子项目零代码接入）============
 # 反馈页托管在小影 API 侧：{XIAOYING_API_BASE}/feedback/<APPID>/。
-# 这里填本站在小影「接入项目」里的 APPID —— 反馈数据按它归属到本项目；
-# 页脚「开发者联系方式」弹窗也用同一个 APPID 去查（免签名接口）。
+# APPID 直接用签名那套的 XIAOYING_API_APPID（见 API/common/signature.py）——
+# 反馈数据按「接入项目」归属，和签名用的是同一个项目，不需要再单独配一个。
 # 本站没有登录体系，用户以游客身份匿名提交；有登录态的项目可再换一次性票据带上身份。
 # 详见 Web/services/feedback.py 顶部的接入说明。
-XIAOYING_FEEDBACK_APP_ID = os.getenv('XIAOYING_FEEDBACK_APP_ID',
-                                     'app_69ac08a215fe38ed28e952fba38e')
 
 
 # ============ 缓存配置（小影 API 数据缓存，只缓存不落库） ============
