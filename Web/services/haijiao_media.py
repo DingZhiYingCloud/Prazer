@@ -27,9 +27,14 @@ from API.common.signature import API_BASE
 # 源站正文里 <img src="混淆地址"> 的 src 属性
 _IMG_SRC_RE = re.compile(r'(<img[^>]*?\bsrc=)([\'"])(https?://[^\'"]+?\.txt)\2', re.IGNORECASE)
 
-# 无图 / 图片加载失败时的占位图。文案分语言，所以按语言各放一张；
-# 没有专属图的语言回退到默认图（= 站点默认语言 pt-br 那张）。
-PLACEHOLDER_DEFAULT = '/media/placeholder.png'
+# 无图 / 图片加载失败时的占位图。文案分语言，所以按语言各放一张：
+#   placeholder-pt.png  pt-BR（站点默认语言）
+#   placeholder-zh.png  简体中文
+# 为什么默认图不叫 placeholder.png：nginx 对 /media/ 下发了 `expires 30d`，
+# 老名字 placeholder.png 已被浏览器缓存了旧图（内容是中文），沿用同名 URL 会 30 天不更新；
+# 换成新文件名才能让所有人立刻拿到新图。旧的 placeholder.png 仍在，只为兜住
+# 老缓存页面里的引用，代码不再指向它。
+PLACEHOLDER_DEFAULT = '/media/placeholder-pt.png'
 PLACEHOLDER_BY_LANG = {
     'zh-hans': '/media/placeholder-zh.png',
 }

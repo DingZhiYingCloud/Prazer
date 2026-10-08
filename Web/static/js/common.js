@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 document.addEventListener('DOMContentLoaded', function () {
     var FALLBACK = document.documentElement.getAttribute('data-img-placeholder')
-        || '/media/placeholder.png';
+        || '/media/placeholder-pt.png';
 
     document.addEventListener('error', function (event) {
         var el = event.target;
