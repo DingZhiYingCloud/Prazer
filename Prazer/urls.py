@@ -24,14 +24,23 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='home', permanent=False)),
     path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
     path('sitemap.xml', bz_request.sitemap, name='sitemap'),
-    # 语言切换端点：POST /i18n/setlang/（django.conf.urls.i18n 提供 set_language）
-    path('i18n/', include('django.conf.urls.i18n')),
     # 语言无关的工具端点（图片代理 / 下载 / 意见反馈）
     *web_urlpatterns,
 ]
 
 # 页面路由：带语言前缀（/pt-br/... 与 /zh-hans/...）
-urlpatterns += i18n_patterns(*page_urlpatterns)
+#
+# 语言切换端点也必须放进 i18n_patterns（即 /pt-br/i18n/setlang/），不能放在无前缀路径下：
+#   set_language 内部会调 translate_url(next, lang)，而 translate_url 用 resolve() 解析 next；
+#   Django 的 LocalePrefixPattern.match() 只认「当前激活语言」那个前缀，前缀不匹配就直接 404。
+#   若 setlang 放在无前缀的 /i18n/setlang/，激活语言只能来自 cookie / Accept-Language：
+#   中文浏览器（Accept-Language: zh-CN）下激活语言是 zh-hans，此时 resolve('/pt-br/') 失败，
+#   translate_url 原样返回 /pt-br/，用户点了「简体中文」却被弹回葡语页（cookie 却已写入）。
+#   放进 i18n_patterns 后请求路径自带当前页语言前缀，激活语言与 next 的前缀一致，翻译才成立。
+urlpatterns += i18n_patterns(
+    path('i18n/', include('django.conf.urls.i18n')),
+    *page_urlpatterns,
+)
 
 # 自定义错误页处理（DEBUG=False 时生效）
 handler404 = 'Web.views.request.error_404'
