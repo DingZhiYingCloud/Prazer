@@ -2,13 +2,12 @@
 {% comment %}
 全站页头（原「左侧侧边栏」已下架，频道导航统一收进这里）：
   第一行 —— 站点 logo/站名 + 海角搜索框 + 下载 App + 账号入口（登录 / 个人中心 / 退出）+ 深浅色切换；
-  第二行 —— 栏目导航（6 大栏目 + 排行榜）+ 语言切换（PT / 中），窄屏时栏目横向滚动、语言切换常驻右侧。
+  第二行 —— 栏目导航（6 大栏目）+ 语言切换（PT / 中），窄屏时栏目横向滚动、语言切换常驻右侧。
 
 本站当前只有海角社区一个频道，搜索框固定搜海角帖子（普通 GET 表单 → /haijiao/search.html，
-不依赖 JS）。当前栏目高亮用列表页传入的 tab，排行榜高亮看当前路径。
+不依赖 JS）。当前栏目高亮用列表页传入的 tab。
 所有站内链接一律走 {% url %}，这样切换语言时会自动带上对应语言前缀。
 {% endcomment %}
-{% url 'haijiao_ranking' as ranking_url %}
 <header class="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur">
     <div class="mx-auto w-full px-3 sm:px-4">
 
@@ -84,9 +83,6 @@
                 {% if tab == 'essence' %}aria-current="true"{% endif %}>{% trans '精华' %}</a>
             <a href="{% url 'haijiao_list' 'latest' %}" class="xy-filter-pill shrink-0 {% if tab == 'latest' %}is-active{% endif %}"
                 {% if tab == 'latest' %}aria-current="true"{% endif %}>{% trans '最新' %}</a>
-            <a href="{% url 'haijiao_ranking' %}"
-                class="xy-filter-pill shrink-0 {% if request.path == ranking_url %}is-active{% endif %}"
-                {% if request.path == ranking_url %}aria-current="true"{% endif %}>{% trans '排行榜' %}</a>
         </nav>
     </div>
 </header>

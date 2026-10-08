@@ -1,4 +1,4 @@
-"""海角社区的媒体地址处理（详情页 / 排行榜 / 个人中心共用）
+"""海角社区的媒体地址处理（详情页 / 个人中心共用）
 
 源站把用户头像、帖内图片、视频封面都放在「混淆地址」里（形如 …/<hash>.jpeg.txt），
 直接当图片用只会拿到一段文本，必须经 /api/haijiao/image 解密端点转换。
@@ -12,17 +12,33 @@
 调用示例：
     from Web.services import haijiao_media
 
-    haijiao_media.avatar_url(item)                       # 排行榜条目 / 用户名片
+    haijiao_media.avatar_url(item)                       # 用户名片等含头像的条目
     haijiao_media.avatar_url(detail.get('author'))       # 帖子作者
     haijiao_media.media_url(images[0])                   # 列表卡片封面
 """
 import re
 from urllib.parse import quote
 
+from django.conf import settings
+from django.utils.translation import get_language
+
 from API.common.signature import API_BASE
 
 # 源站正文里 <img src="混淆地址"> 的 src 属性
 _IMG_SRC_RE = re.compile(r'(<img[^>]*?\bsrc=)([\'"])(https?://[^\'"]+?\.txt)\2', re.IGNORECASE)
+
+# 无图 / 图片加载失败时的占位图。文案分语言，所以按语言各放一张；
+# 没有专属图的语言回退到默认图（= 站点默认语言 pt-br 那张）。
+PLACEHOLDER_DEFAULT = '/media/placeholder.png'
+PLACEHOLDER_BY_LANG = {
+    'zh-hans': '/media/placeholder-zh.png',
+}
+
+
+def placeholder_url(lang=None):
+    """当前语言的占位图地址（模板、卡片、JS 兜底都走这里，保证三处一致）"""
+    code = lang or get_language() or settings.LANGUAGE_CODE
+    return PLACEHOLDER_BY_LANG.get(code, PLACEHOLDER_DEFAULT)
 
 
 def image_url(encrypted_url):
@@ -46,7 +62,7 @@ def media_url(url):
 def avatar_url(node):
     """头像地址：avatar_encrypted 为真时走解密端点，否则原样返回
 
-    适用于所有含 avatar / avatar_encrypted 的结构（帖子作者、排行榜条目、用户名片）。
+    适用于所有含 avatar / avatar_encrypted 的结构（帖子作者、用户名片）。
     avatar_encrypted=false 的两种情形（接口已补成完整地址）：
         1. 站点默认头像 → https://…/images/common/avatar/<编号>.jpg
         2. 极少数被接口处理过的自定义头像

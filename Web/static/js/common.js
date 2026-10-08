@@ -159,11 +159,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /* ============ 图片：加载失败兜底 ============
  * load / error 不冒泡，所以在捕获阶段监听：
- *   加载失败 → 换成兜底图（media/placeholder.png），并标记避免兜底图自身失败时死循环。
+ *   加载失败 → 换成兜底图，并标记避免兜底图自身失败时死循环。
+ * 兜底图是分语言的（pt-BR / zh-Hans 各一张），地址由服务端渲染在 <html data-img-placeholder>，
+ * 这里读它而不是写死路径，免得中文页挂出葡语占位图。
  * 不做淡入/骨架：图片加载完成直接显示（用户明确要求页面零动画）。
  */
 document.addEventListener('DOMContentLoaded', function () {
-    var FALLBACK = '/media/placeholder.png';
+    var FALLBACK = document.documentElement.getAttribute('data-img-placeholder')
+        || '/media/placeholder.png';
 
     document.addEventListener('error', function (event) {
         var el = event.target;

@@ -1,5 +1,6 @@
 {% load i18n %}{% get_current_language as CUR_LANG %}<!DOCTYPE html>
-<html lang="{% if CUR_LANG == 'zh-hans' %}zh-CN{% else %}pt-BR{% endif %}">
+<html lang="{% if CUR_LANG == 'zh-hans' %}zh-CN{% else %}pt-BR{% endif %}"
+    data-img-placeholder="{{ IMG_PLACEHOLDER }}">
 
 <head>
     <meta charset="UTF-8" />

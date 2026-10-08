@@ -10,6 +10,7 @@
     {{ SITE_CONTACT_EMAIL }}  联系邮箱
     {{ SITE_CONTACT_WECHAT }} 微信号
     {{ SITE_CONTACT_TG }}     Telegram
+    {{ IMG_PLACEHOLDER }}     当前语言的占位图地址（无图/加载失败时用）
     {{ STATIC_VERSION }}      output.css 的版本号（文件修改时间，用于刷新浏览器缓存）
     {{ FEEDBACK_API_BASE }}   反馈中心基础地址（「开发者联系方式」弹窗走它的免签接口）
     {{ FEEDBACK_APP_ID }}     本站反馈中心的 APPID（反馈数据按它归属）
@@ -18,7 +19,7 @@ import os
 
 from django.conf import settings
 
-from Web.services import feedback
+from Web.services import feedback, haijiao_media
 
 
 def _static_version():
@@ -47,6 +48,8 @@ def site_info(request):
         'SITE_CONTACT_EMAIL': settings.SITE_CONTACT_EMAIL,
         'SITE_CONTACT_WECHAT': settings.SITE_CONTACT_WECHAT,
         'SITE_CONTACT_TG': settings.SITE_CONTACT_TG,
+        # 无图 / 图片加载失败时的占位图，按当前语言取（见 haijiao_media.placeholder_url）
+        'IMG_PLACEHOLDER': haijiao_media.placeholder_url(),
         'STATIC_VERSION': _static_version(),
         # 问题反馈中心：模板用它渲染「开发者联系方式」弹窗
         'FEEDBACK_API_BASE': feedback.FEEDBACK_BASE,

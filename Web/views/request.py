@@ -661,7 +661,6 @@ def app_download(request):
 # 本站现只上线海角社区频道，故仅收录海角社区的页面：
 #   首页 /          「热帖」第 1 页（= 海角频道首页）
 #   栏目首页         6 大栏目各自的第 1 页
-#   排行榜           /haijiao/ranking.html
 # 帖子详情页不收录：本站内容需在 App 内观看，详情页只给出下载指引并设 noindex。
 # 页面路由都带语言前缀，所以每个路径会按 LANGUAGES 展开成多语言地址（配合各页的 hreflang）。
 # 内容来自实时抓取，本地没有可信时间戳，因此不写 lastmod（宁缺勿假）。
@@ -690,12 +689,11 @@ def _build_sitemap_urls():
         # 热帖第 1 页就是首页 /，不重复收录
         if tab != 'hot':
             add_all_languages(f'/haijiao/list/{tab}.html', 'daily', '0.8')
-    add_all_languages('/haijiao/ranking.html', 'weekly', '0.6')
     return urls
 
 
 def sitemap(request):
-    """sitemap.xml：首页 + 栏目页 + 排行榜，路径列表缓存 6 小时
+    """sitemap.xml：首页 + 栏目页，路径列表缓存 6 小时
 
     单文件 sitemap 上限 5 万条 URL / 50 MB（未压缩），本站收录量远低于上限。
     """

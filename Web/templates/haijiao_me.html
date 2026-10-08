@@ -32,7 +32,7 @@ info / wealth 由视图用 user/info + user/wealth 取；两个都取不到才�
         <div class="rounded-box border border-base-300 bg-base-100 p-4 lg:col-span-2">
             {% if info %}
             <div class="flex items-center gap-4">
-                <img src="{% if info.avatar %}{{ info.avatar }}{% else %}/media/placeholder.png{% endif %}" alt=""
+                <img src="{% if info.avatar %}{{ info.avatar }}{% else %}{{ IMG_PLACEHOLDER }}{% endif %}" alt=""
                     class="h-16 w-16 shrink-0 rounded-full border border-base-300 bg-base-200 object-cover" />
                 <div class="min-w-0">
                     <p class="truncate text-lg font-bold">{{ info.nickname }}</p>

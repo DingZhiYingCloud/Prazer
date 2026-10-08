@@ -17,7 +17,6 @@ from Web.services import haijiao_cards, haijiao_media
 
 # 每页卡片数（与接口每页条数一致）
 PER_PAGE = 20
-PLACEHOLDER = '/media/placeholder.png'
 
 
 def _localized(row, lang):
@@ -57,7 +56,7 @@ def random_page(page, per_page=PER_PAGE):
         items.append({
             'id': row.topic_id,
             'name': title or f'帖子 {row.topic_id}',
-            'cover': haijiao_media.media_url(row.cover) or PLACEHOLDER,
+            'cover': haijiao_media.media_url(row.cover) or haijiao_media.placeholder_url(),
             'note': haijiao_cards.build_note(node_name, row.view_count, row.comment_count),
             'stats': [
                 {'icon': 'eye', 'value': row.view_count or 0},

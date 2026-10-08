@@ -3,7 +3,7 @@
 字段由 Web/views/haijiao_account.py 的 _user_card() 整理，头像已解密。
 {% endcomment %}
 <li class="flex items-center gap-3 rounded-box border border-base-300 bg-base-100 p-3 transition hover:border-primary/30">
-    <img src="{% if item.avatar %}{{ item.avatar }}{% else %}/media/placeholder.png{% endif %}" alt=""
+    <img src="{% if item.avatar %}{{ item.avatar }}{% else %}{{ IMG_PLACEHOLDER }}{% endif %}" alt=""
         loading="lazy" class="h-11 w-11 shrink-0 rounded-full border border-base-300 bg-base-200 object-cover" />
     <div class="min-w-0 flex-1">
         <p class="truncate text-sm font-medium">{{ item.nickname }}</p>

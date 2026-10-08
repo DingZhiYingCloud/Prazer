@@ -35,8 +35,6 @@ page_urlpatterns = [
     path('haijiao/list/<str:tab>.html', haijiao.haijiao_list, name='haijiao_list'),
     path('haijiao/list/<str:tab>/<int:page>.html', haijiao.haijiao_list, name='haijiao_list_page'),
     path('haijiao/topic/<str:topic_id>.html', haijiao.haijiao_topic, name='haijiao_topic'),
-    # 排行榜：3 个维度 × 3 个周期，维度/周期走 ?board=&period=（非法值回落默认）
-    path('haijiao/ranking.html', haijiao.haijiao_ranking, name='haijiao_ranking'),
     path('haijiao/play/<str:topic_id>/<str:attachment_id>.html',
          haijiao.haijiao_play, name='haijiao_play'),
     # m3u8 内联的 AES-128 密钥字节：hls.js 不认 data: URI 密钥，播放器改为向这里取

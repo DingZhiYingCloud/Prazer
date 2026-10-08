@@ -15,10 +15,6 @@ account 由视图传入（见 Web/services/haijiao_auth.py 的 current()）。
             {% include 'common_html/haijiao_icon.html' with name='home' %}
             海角首页
         </a>
-        <a href="/haijiao/ranking.html" class="link link-hover flex items-center gap-1.5">
-            {% include 'common_html/haijiao_icon.html' with name='chart' %}
-            排行榜
-        </a>
     </div>
 
     {% if account %}

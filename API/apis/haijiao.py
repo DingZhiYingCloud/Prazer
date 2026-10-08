@@ -8,7 +8,6 @@
     get_topic_detail(topic_id)       帖子详情（含正文/图片/视频附件/相关推荐）
     get_comments(topic_id, page)     主评论列表
     get_replies(comment_id, page)    二级评论列表
-    get_ranking(board, period)       首页排行榜（粉丝/点赞/人气 × 总/月/周）
     get_gifts(kind, page)            打赏礼物清单
     get_video_m3u8(topic_id, aid)    可直播 m3u8（已还原真密钥，需凭据）
 
@@ -237,36 +236,8 @@ def get_video_m3u8(topic_id, attachment_id):
 
 
 # ============================================================
-# 排行榜（公开只读）
+# 其它站点级数据（公开只读）
 # ============================================================
-
-# 榜单维度与周期（接口约定取值，非法值返回 20003）
-RANK_BOARDS = ('fans', 'liked', 'wealth')
-RANK_BOARD_LABELS = {'fans': _lazy('粉丝榜'), 'liked': _lazy('点赞榜'), 'wealth': _lazy('人气榜')}
-RANK_PERIODS = ('all', 'month', 'week')
-RANK_PERIOD_LABELS = {'all': _lazy('总榜'), 'month': _lazy('月榜'), 'week': _lazy('周榜')}
-
-
-def get_ranking(board='fans', period='all'):
-    """首页排行榜：一次返回整张榜单（不翻页，实测约 101 条）
-
-    :param board: 榜单维度（fans 粉丝 / liked 点赞 / wealth 人气）。
-    :param period: 统计周期（all 总榜 / month 月榜 / week 周榜）。
-
-    返回 {'board', 'board_label', 'period', 'period_label', 'total', 'results'}；
-    results[] 含 rank / user_id / nickname / avatar / avatar_encrypted /
-    vip / famous / certified / value / title。
-    """
-    if board not in RANK_BOARDS:
-        board = 'fans'
-    if period not in RANK_PERIODS:
-        period = 'all'
-    return _cached_data(
-        f'{CACHE_PREFIX}:ranking:{board}:{period}',
-        settings.XIAOYING_MOVIE_CACHE_TTL,
-        f'{LINE_PATH}/ranking',
-        {'board': board, 'period': period},
-    )
 
 
 def get_gifts(kind='gold', page=1):

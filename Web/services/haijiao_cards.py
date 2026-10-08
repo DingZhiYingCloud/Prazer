@@ -76,9 +76,9 @@ def cards(items):
             # 标题为空说明源站只回了骨架（少数接口如此），给个中性占位，
             # 否则卡片是一片空白，看着像页面坏了
             'name': item.get('title') or f'帖子 {topic_id}',
-            # 没有配图时退到站点占位图：<img src=""> 在浏览器里是破图，
+            # 没有配图时退到站点占位图（按当前语言选图）：<img src=""> 在浏览器里是破图，
             # 而 common.js 的兜底只处理"加载失败"，不处理空地址
-            'cover': cover or '/media/placeholder.png',
+            'cover': cover or haijiao_media.placeholder_url(),
             'stats': _stats(item),
             'node_name': node_name,
             'category': node_name or (tags[0] if tags else '海角社区'),

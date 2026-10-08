@@ -40,8 +40,5 @@
         <a href="{% url 'haijiao_index' %}" class="btn btn-primary btn-sm">{% trans '回到海角首页' %}</a>
     </div>
     {% endif %}
-
-    {# 排行榜：只出现在频道首页（热帖第 1 页），见 haijiao_list 视图 #}
-    {% if ranking %}{% include 'common_html/haijiao_ranking.html' %}{% endif %}
 </section>
 {% endblock %}

@@ -59,9 +59,6 @@ msgstr "精华"
 msgid "最新"
 msgstr "最新"
 
-msgid "排行榜"
-msgstr "排行榜"
-
 msgid "频道入口"
 msgstr "频道入口"
 
@@ -243,24 +240,6 @@ msgstr "搜索「%(kw)s」"
 msgid "帖子详情"
 msgstr "帖子详情"
 
-msgid "粉丝榜"
-msgstr "粉丝榜"
-
-msgid "点赞榜"
-msgstr "点赞榜"
-
-msgid "人气榜"
-msgstr "人气榜"
-
-msgid "总榜"
-msgstr "总榜"
-
-msgid "月榜"
-msgstr "月榜"
-
-msgid "周榜"
-msgstr "周榜"
-
 msgid "免费社区"
 msgstr "免费社区"
 
@@ -305,37 +284,8 @@ msgstr "这一页没有内容了，往前翻翻看。"
 msgid "没找到与「%(keyword)s」相关的帖子。"
 msgstr "没找到与「%(keyword)s」相关的帖子。"
 
-msgid "海角社区排行榜"
-msgstr "海角社区排行榜"
-
-msgid "海角社区%(b)s%(p)s - 排行榜"
-msgstr "海角社区%(b)s%(p)s - 排行榜"
-
-msgid "海角社区%(b)s（%(p)s）共 %(t)s 位用户，按源站公开榜单实时展示。"
-msgstr "海角社区%(b)s（%(p)s）共 %(t)s 位用户，按源站公开榜单实时展示。"
-
-msgid "海角社区%(b)s%(p)s"
-msgstr "海角社区%(b)s%(p)s"
-
-msgid "粉丝榜 / 点赞榜 / 人气榜，每张榜另有总榜、月榜、周榜。排名与数值来自海角社区公开榜单。"
-msgstr "粉丝榜 / 点赞榜 / 人气榜，每张榜另有总榜、月榜、周榜。排名与数值来自海角社区公开榜单。"
-
-msgid "查看完整榜单"
-msgstr "查看完整榜单"
-
 msgid "榜单"
 msgstr "榜单"
-
-msgid "周期"
-msgstr "周期"
-
-msgid "共 %(n)s 人"
-msgid_plural "共 %(n)s 人"
-msgstr[0] "共 %(n)s 人"
-msgstr[1] "共 %(n)s 人"
-
-msgid "这个榜单暂时取不到数据，换个榜单或稍后刷新试试。"
-msgstr "这个榜单暂时取不到数据，换个榜单或稍后刷新试试。"
 
 msgid "返回海角首页"
 msgstr "返回海角首页"
