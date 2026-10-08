@@ -16,9 +16,12 @@ from Web.views.urls import page_urlpatterns
 from Web.views.urls import urlpatterns as web_urlpatterns
 
 urlpatterns = [
-    # 根路径强制进葡语首页（不再按 Accept-Language 协商）：
-    # 站点面向巴西用户，默认语言固定 pt-br；要改成协商请换回 RedirectView(pattern_name='home')。
-    path('', RedirectView.as_view(url='/pt-br/', permanent=False)),
+    # 根路径跳当前语言的首页：按 LocaleMiddleware 协商出的语言反向解析 'home'。
+    # 协商顺序（/ 没有语言前缀，所以从第 2 步开始）：会话 → django_language cookie
+    # → Accept-Language → LANGUAGE_CODE（仍是 pt-br，作为新访客的兜底）。
+    # 不能写成 RedirectView(url='/pt-br/')：那样会把已选中文的用户硬拽回葡语，
+    # 相当于每次只输域名都重置语言。
+    path('', RedirectView.as_view(pattern_name='home', permanent=False)),
     path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
     path('sitemap.xml', bz_request.sitemap, name='sitemap'),
     # 语言切换端点：POST /i18n/setlang/（django.conf.urls.i18n 提供 set_language）
