@@ -13,8 +13,6 @@ info / wealth 由视图用 user/info + user/wealth 取；两个都取不到才�
 {% endcomment %}
 <section class="mx-auto w-full max-w-7xl px-4 py-6">
     {% include 'common_html/breadcrumbs.html' %}
-    {% include 'common_html/haijiao_user_bar.html' %}
-
     <h1 class="mt-4 flex items-center gap-2 text-2xl font-bold sm:text-3xl">
         {% include 'common_html/haijiao_icon.html' with name='user' class='h-6 w-6 shrink-0 opacity-70' %}
         个人中心
@@ -25,7 +23,7 @@ info / wealth 由视图用 user/info + user/wealth 取；两个都取不到才�
     <div class="alert alert-warning mt-4 text-sm">
         <span>
             登录状态可能已失效（取不到账号资料）。
-            <a class="link" href="/haijiao/login.html?next=/haijiao/me.html">重新登录</a>
+            <a class="link" href="{% url 'haijiao_login' %}?next={% url 'haijiao_me' %}">重新登录</a>
         </span>
     </div>
     {% endif %}
@@ -99,32 +97,32 @@ info / wealth 由视图用 user/info + user/wealth 取；两个都取不到才�
                     <p class="text-lg font-bold">{{ wealth.diamond|default:0 }}</p>
                 </div>
             </div>
-            <form method="post" action="/haijiao/action/sign-in.html" class="mt-3">
+            <form method="post" action="{% url 'haijiao_sign_in' %}" class="mt-3">
                 <button type="submit" class="btn btn-primary btn-sm w-full">每日签到</button>
             </form>
             <p class="mt-2 text-xs text-base-content/60">签到每天可领 20 金币，重复点击不会重复发放。</p>
-            <a href="/haijiao/me/wealth.html" class="link link-hover mt-2 inline-block text-xs">查看金币流水</a>
+            <a href="{% url 'haijiao_me_wealth' %}" class="link link-hover mt-2 inline-block text-xs">查看金币流水</a>
         </div>
     </div>
 
     <div class="mt-4 flex flex-wrap gap-2">
-        <a href="/haijiao/me/topics.html" class="btn btn-ghost btn-sm gap-1.5">
+        <a href="{% url 'haijiao_me_topics' %}" class="btn btn-ghost btn-sm gap-1.5">
             {% include 'common_html/haijiao_icon.html' with name='file' %}
             我的帖子
         </a>
-        <a href="/haijiao/me/liked.html" class="btn btn-ghost btn-sm gap-1.5">
+        <a href="{% url 'haijiao_me_liked' %}" class="btn btn-ghost btn-sm gap-1.5">
             {% include 'common_html/haijiao_icon.html' with name='heart' %}
             我点赞的
         </a>
-        <a href="/haijiao/me/favorites.html" class="btn btn-ghost btn-sm gap-1.5">
+        <a href="{% url 'haijiao_me_favorites' %}" class="btn btn-ghost btn-sm gap-1.5">
             {% include 'common_html/haijiao_icon.html' with name='bookmark' %}
             我的收藏
         </a>
-        <a href="/haijiao/me/following.html" class="btn btn-ghost btn-sm gap-1.5">
+        <a href="{% url 'haijiao_me_following' %}" class="btn btn-ghost btn-sm gap-1.5">
             {% include 'common_html/haijiao_icon.html' with name='user-plus' %}
             我关注的人
         </a>
-        <a href="/haijiao/me/fans.html" class="btn btn-ghost btn-sm gap-1.5">
+        <a href="{% url 'haijiao_me_fans' %}" class="btn btn-ghost btn-sm gap-1.5">
             {% include 'common_html/haijiao_icon.html' with name='users' %}
             我的粉丝
         </a>

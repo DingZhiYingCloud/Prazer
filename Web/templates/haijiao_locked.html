@@ -1,0 +1,45 @@
+{% extends 'template.html' %}
+{% load i18n %}
+
+{% comment %}
+「需在 App 内使用」的通用拦截页。
+
+本站网页端只保留**可静态化**的内容（首页 / 栏目列表 / 排行榜）；
+搜索、登录与个人中心这些必须连小影接口、无法静态化的功能，一律展示本页：
+说明该功能要在 App 内使用，并给一个打开下载弹窗的按钮（见 common_html/app_download_modal.html）。
+
+由 Web/views/haijiao.py 的 _locked_page() 传入 locked_title / locked_desc。
+{% endcomment %}
+{% block title %}{{ locked_title }} - {{ SITE_NAME_ALT }}{% endblock %}
+{% block description %}{{ locked_desc }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<section class="mx-auto flex w-full max-w-3xl flex-col items-center px-4 py-20 text-center">
+    {% include 'common_html/breadcrumbs.html' %}
+
+    <span class="mt-6 flex h-12 w-12 items-center justify-center rounded-box bg-base-200">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6" aria-hidden="true">
+            <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
+            <path d="M11 18.5h2" />
+        </svg>
+    </span>
+
+    <h1 class="mt-4 text-xl font-bold sm:text-2xl">{{ locked_title }}</h1>
+    <p class="mt-2 text-sm opacity-60">{{ locked_desc }}</p>
+
+    <button type="button" data-app-download class="btn btn-primary mt-6 gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0"
+            aria-hidden="true">
+            <path d="M12 3v12" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
+        </svg>
+        {% trans '下载 App' %}
+    </button>
+
+    <a href="{% url 'home' %}" class="btn btn-ghost btn-sm mt-3">{% trans '返回首页' %}</a>
+</section>
+{% endblock %}

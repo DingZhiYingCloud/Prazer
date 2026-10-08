@@ -14,9 +14,13 @@ from Web.views.pic import pic_url, sign
 # 模板目录（用于"多行 {# #} 注释"这类静态检查）
 TEMPLATE_DIR = pathlib.Path(__file__).resolve().parent / 'templates'
 
-# 测试用内存缓存：避免测试往项目 cache/ 目录里写文件
+# 测试用内存缓存：避免测试往项目 cache/ 目录里写文件。
+# 注意：override_settings 会**整体替换** CACHES，所以会话用的独立别名
+# （settings.SESSION_CACHE_ALIAS = 'sessions'）也必须一并给出，
+# 否则 SessionMiddleware 取不到该别名，每个请求都会直接 500。
 LOCMEM_CACHE = {
     'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+    'sessions': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
 }
 
 HOME_DATA = {

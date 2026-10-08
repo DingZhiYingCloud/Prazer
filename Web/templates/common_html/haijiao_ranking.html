@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 排行榜模块（海角频道首页底部 与 /haijiao/ranking.html 共用）
 
@@ -12,19 +13,19 @@
 <section class="mt-8">
     <div class="flex flex-wrap items-end justify-between gap-2">
         <h2 class="flex items-center gap-2 text-lg font-bold">
-            <span class="inline-block h-5 w-1.5 rounded-full bg-primary"></span>排行榜
+            <span class="inline-block h-5 w-1.5 rounded-full bg-primary"></span>{% trans '排行榜' %}
             <span class="text-sm font-normal text-base-content/60">{{ ranking.board_label }} · {{ ranking.period_label }}</span>
         </h2>
         {% if ranking.compact %}
-        <a href="{{ ranking.full_href }}" class="link link-hover text-sm text-base-content/60">查看完整榜单</a>
+        <a href="{{ ranking.full_href }}" class="link link-hover text-sm text-base-content/60">{% trans '查看完整榜单' %}</a>
         {% else %}
-        <span class="text-sm text-base-content/60">共 {{ ranking.total }} 人</span>
+        <span class="text-sm text-base-content/60">{% blocktrans count n=ranking.total %}共 {{ n }} 人{% plural %}共 {{ n }} 人{% endblocktrans %}</span>
         {% endif %}
     </div>
 
     <div class="mt-3 rounded-box border border-base-300 bg-base-100 p-3">
         <div class="xy-filter-group">
-            <span class="xy-filter-label">榜单</span>
+            <span class="xy-filter-label">{% trans '榜单' %}</span>
             <div class="xy-filter-options">
                 {% for link in ranking.board_links %}
                 <a href="{{ link.href }}" class="xy-filter-pill {% if link.active %}is-active{% endif %}"
@@ -33,7 +34,7 @@
             </div>
         </div>
         <div class="xy-filter-group mt-2">
-            <span class="xy-filter-label">周期</span>
+            <span class="xy-filter-label">{% trans '周期' %}</span>
             <div class="xy-filter-options">
                 {% for link in ranking.period_links %}
                 <a href="{{ link.href }}" class="xy-filter-pill {% if link.active %}is-active{% endif %}"
@@ -58,6 +59,6 @@
         {% endfor %}
     </ol>
     {% else %}
-    <p class="mt-3 text-sm text-base-content/60">这个榜单暂时取不到数据，换个榜单或稍后刷新试试。</p>
+    <p class="mt-3 text-sm text-base-content/60">{% trans '这个榜单暂时取不到数据，换个榜单或稍后刷新试试。' %}</p>
     {% endif %}
 </section>

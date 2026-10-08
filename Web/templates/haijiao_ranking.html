@@ -1,9 +1,10 @@
 {% extends 'template.html' %}
+{% load i18n %}
 
-{% block title %}海角社区{{ ranking.board_label }}{{ ranking.period_label }} - 排行榜 - {{ SITE_NAME_ALT }}{% endblock %}
-{% block keywords %}海角社区排行榜,{{ ranking.board_label }},{{ ranking.period_label }},{{ SITE_NAME }}{% endblock %}
-{% block description %}海角社区{{ ranking.board_label }}（{{ ranking.period_label }}）共 {{ ranking.total }} 位用户，按源站公开榜单实时展示。{% endblock %}
-{% block og_title %}海角社区{{ ranking.board_label }}{{ ranking.period_label }}{% endblock %}
+{% block title %}{% blocktrans trimmed with b=ranking.board_label p=ranking.period_label %}海角社区{{ b }}{{ p }} - 排行榜{% endblocktrans %} - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}{% trans '海角社区排行榜' %},{{ ranking.board_label }},{{ ranking.period_label }},{{ SITE_NAME }}{% endblock %}
+{% block description %}{% blocktrans trimmed with b=ranking.board_label p=ranking.period_label t=ranking.total %}海角社区{{ b }}（{{ p }}）共 {{ t }} 位用户，按源站公开榜单实时展示。{% endblocktrans %}{% endblock %}
+{% block og_title %}{% blocktrans trimmed with b=ranking.board_label p=ranking.period_label %}海角社区{{ b }}{{ p }}{% endblocktrans %}{% endblock %}
 {% block robots %}noindex, follow{% endblock %}
 
 {% block content %}
@@ -14,17 +15,15 @@
 {% endcomment %}
 <section class="mx-auto w-full max-w-7xl px-4 py-6">
     {% include 'common_html/breadcrumbs.html' %}
-    {% include 'common_html/haijiao_user_bar.html' %}
-
-    <h1 class="mt-2 text-2xl font-bold sm:text-3xl">海角社区排行榜</h1>
+    <h1 class="mt-2 text-2xl font-bold sm:text-3xl">{% trans '海角社区排行榜' %}</h1>
     <p class="mt-1 text-sm text-base-content/60">
-        粉丝榜 / 点赞榜 / 人气榜，每张榜另有总榜、月榜、周榜。排名与数值来自海角社区公开榜单。
+        {% trans '粉丝榜 / 点赞榜 / 人气榜，每张榜另有总榜、月榜、周榜。排名与数值来自海角社区公开榜单。' %}
     </p>
 
     {% include 'common_html/haijiao_ranking.html' %}
 
     <div class="mt-8">
-        <a href="/haijiao/list.html" class="btn btn-ghost btn-sm">返回海角首页</a>
+        <a href="{% url 'haijiao_index' %}" class="btn btn-ghost btn-sm">{% trans '返回海角首页' %}</a>
     </div>
 </section>
 {% endblock %}

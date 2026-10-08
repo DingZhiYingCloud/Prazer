@@ -7,6 +7,7 @@
 产出格式与 common_html/pager.html 对齐：每条含 text / href / current，
 href 为 None 表示这一格不可点（已到首/尾页，或只是省略号占位）。
 """
+from django.utils.translation import gettext as _
 
 
 def positive_int(value, default=1):
@@ -36,7 +37,7 @@ def build(page, total_pages, url_for):
     numbers = {1, total}
     numbers.update(range(max(1, page - 2), min(total, page + 2) + 1))
 
-    links = [{'text': '上一页', 'href': url_for(page - 1) if page > 1 else None,
+    links = [{'text': _('上一页'), 'href': url_for(page - 1) if page > 1 else None,
               'current': False}]
     previous = 0
     for number in sorted(numbers):
@@ -46,7 +47,7 @@ def build(page, total_pages, url_for):
                       'current': number == page})
         previous = number
     links.append({
-        'text': '下一页',
+        'text': _('下一页'),
         'href': url_for(page + 1) if page < total else None,
         'current': False,
     })

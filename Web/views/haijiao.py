@@ -24,9 +24,15 @@ from urllib.parse import quote
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.translation import get_language
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _lazy
 
 from API.apis import haijiao
-from Web.services import haijiao_auth, haijiao_cards, haijiao_media, pager
+from API.models import HaijiaoRankingSnapshot
+from Web.services import (haijiao_auth, haijiao_cards, haijiao_media,
+                          haijiao_snapshot, pager)
+from Web.services import translate as translate_service
 from Web.views.request import error_404
 
 logger = logging.getLogger(__name__)
@@ -61,12 +67,15 @@ def _rewrite_key_uri(m3u8_text):
 
 
 def _rank_items(results, limit=None):
-    """排行榜条目 → 模板友好结构（头像解密 + 头衔名）"""
+    """排行榜条目 → 模板友好结构（头像解密 + 头衔名按当前语言翻译）"""
     rows = results or []
     if limit:
         rows = rows[:limit]
+    # 头衔（青铜/白银/黄金…）是固定小词表，走本地词表硬翻译
+    names = translate_service.translate(
+        [(row.get('title') or {}).get('name') or '' for row in rows], get_language())
     items = []
-    for row in rows:
+    for row, title in zip(rows, names):
         items.append({
             'rank': row.get('rank'),
             'user_id': row.get('user_id'),
@@ -74,19 +83,19 @@ def _rank_items(results, limit=None):
             'avatar': haijiao_media.avatar_url(row),
             'value': row.get('value'),
             'vip': row.get('vip') or 0,
-            'title': (row.get('title') or {}).get('name') or '',
+            'title': title,
         })
     return items
 
 
 # 榜单数值的单位（表头用）
-RANK_VALUE_LABELS = {'fans': '粉丝', 'liked': '获赞', 'wealth': '人气'}
+RANK_VALUE_LABELS = {'fans': _lazy('粉丝'), 'liked': _lazy('获赞'), 'wealth': _lazy('人气')}
 
 
-def _rank_context(board, period, limit=None, base='/haijiao/ranking.html'):
+def _rank_context(board, period, limit=None, base=None):
     """排行榜上下文：榜单数据 + 3×3 切换链接（全站渲染，不依赖 JS）
 
-    base 是"当前页地址"：首页底部与独立榜单页共用这套 tab，
+    base 是"当前页地址"（默认取榜单页地址）：首页底部与独立榜单页共用这套 tab，
     点 tab 只带 ?board=&period= 参数留在当前页。
     链接在视图层算好（模板不能给 callable 传参，与 drama_list 的 top_links 同款）。
     """
@@ -94,7 +103,12 @@ def _rank_context(board, period, limit=None, base='/haijiao/ranking.html'):
         board = 'fans'
     if period not in haijiao.RANK_PERIODS:
         period = 'all'
-    data = haijiao.get_ranking(board, period) or {}
+    base = base or reverse('haijiao_ranking')
+    # 排行榜同样是"冻结"数据：读本地快照（manage.py build_haijiao_ranking），
+    # 不再实时请求小影接口。榜单没抓过时按空榜渲染（模板给空态文案）。
+    row = HaijiaoRankingSnapshot.objects.filter(board=board, period=period).first()
+    results = row.items if row else []
+    total = row.total if row else 0
 
     def switch_url(target_board, target_period, target_base=None):
         # 默认组合回落成不带参数的地址，避免"同一内容两个地址"
@@ -119,14 +133,15 @@ def _rank_context(board, period, limit=None, base='/haijiao/ranking.html'):
     return {
         'board': board,
         'period': period,
-        'board_label': data.get('board_label') or haijiao.RANK_BOARD_LABELS[board],
-        'period_label': data.get('period_label') or haijiao.RANK_PERIOD_LABELS[period],
-        'total': data.get('total') or 0,
-        'items': _rank_items(data.get('results'), limit),
-        'value_label': RANK_VALUE_LABELS.get(board, '数值'),
+        # 维度/周期名不落库，按当前语言取（词条见 locale/）
+        'board_label': haijiao.RANK_BOARD_LABELS[board],
+        'period_label': haijiao.RANK_PERIOD_LABELS[period],
+        'total': total,
+        'items': _rank_items(results, limit),
+        'value_label': RANK_VALUE_LABELS.get(board, _('数值')),
         'board_links': board_links,
         'period_links': period_links,
-        'full_href': switch_url(board, period, '/haijiao/ranking.html'),
+        'full_href': switch_url(board, period, reverse('haijiao_ranking')),
         # 首页底部是"精简形态"（只有前 N 名 + 完整榜单入口）；独立榜单页是全量
         'compact': bool(limit),
     }
@@ -135,51 +150,43 @@ def _rank_context(board, period, limit=None, base='/haijiao/ranking.html'):
 # ============ 视图 ============
 
 
-def haijiao_index(request):
-    """海角首页：等价于 /haijiao/list/hot.html 的第 1 页"""
-    return haijiao_list(request, tab='hot', page=1)
+def _list_canonical(tab, page):
+    """栏目列表页的规范地址：hot 第 1 页 = 频道首页；其它栏目第 1 页不带页码；第 N 页带页码。
 
-
-def haijiao_list(request, tab, page=1):
-    """海角列表：按栏目取内容列表（每页 20 条），带分页
-
-    tab 必须是 6 个合法值之一（hot/news/events/original/essence/latest），
-    否则 404 —— 海角接口对非法 tab 返回 PARAM_VALUE_INVALID，没必要专门
-    渲染一个空壳页。
+    一律用 reverse 生成，这样才能带上当前语言前缀（/pt-br/… 或 /zh-hans/…）。
     """
-    if tab not in haijiao.TABS:
-        raise Http404(f'未知的海角栏目: {tab}')
-    page = max(1, int(page))
-
-    # 地址收敛：hot 第 1 页 = 首页地址；其他栏目第 1 页 = 不带页码；第 N 页带页码
     if tab == 'hot' and page == 1:
-        canonical = '/haijiao/list.html'
-    elif page == 1:
-        canonical = f'/haijiao/list/{tab}.html'
-    else:
-        canonical = f'/haijiao/list/{tab}/{page}.html'
-    if request.path != canonical:
-        query = request.META.get('QUERY_STRING', '')
-        return redirect(canonical + (f'?{query}' if query else ''), permanent=True)
+        return reverse('haijiao_index')
+    if page == 1:
+        return reverse('haijiao_list', args=[tab])
+    return reverse('haijiao_list_page', args=[tab, page])
 
-    data = haijiao.get_topics(tab, page) or {}
-    items = haijiao_cards.cards(data.get('results'))
-    meta = data.get('pagination') or {}
-    total_pages = pager.positive_int(meta.get('total_page') or meta.get('total'), default=page)
-    type_name = f'{haijiao.TAB_LABELS.get(tab, tab)} · 海角社区'
+
+def _render_list_page(request, tab, page, home=False):
+    """渲染栏目列表（home=True 表示这是网站首页，分页第 1 页仍回首页）
+
+    数据来自**本地快照**，不再实时请求小影 API：每次刷新从快照里随机抽一屏，
+    各栏目共用一个池（见 Web/services/haijiao_snapshot.py）。
+    """
+    page = pager.positive_int(page)
+    snapshot = haijiao_snapshot.random_page(page)
+    items = snapshot['items']
+    total_pages = snapshot['total_pages']
+    page = min(page, total_pages)
+
+    type_name = f'{haijiao.TAB_LABELS.get(tab, tab)} · {_("海角社区")}'
     # tab 列表：[(slug, label), ...]，模板一次 for 拿到两个值最干净
     tab_options = [(t, haijiao.TAB_LABELS.get(t, t)) for t in haijiao.TABS]
-    # 排行榜模块只出现在频道首页（热帖第 1 页）：维度/周期走 ?board=&period=，留在本页切换
+    # 排行榜模块只出现在「热帖第 1 页」（含网站首页）：切换维度/周期时留在当前页
+    base = reverse('home') if home else reverse('haijiao_index')
     ranking = _rank_context(request.GET.get('board'), request.GET.get('period'),
-                            limit=10, base='/haijiao/list.html') if tab == 'hot' and page == 1 else None
+                            limit=10, base=base) if tab == 'hot' and page == 1 else None
 
     def page_url(target):
         target = min(max(1, int(target)), total_pages)
-        if tab == 'hot' and target == 1:
-            return '/haijiao/list.html'
         if target == 1:
-            return f'/haijiao/list/{tab}.html'
-        return f'/haijiao/list/{tab}/{target}.html'
+            return base if home else _list_canonical(tab, 1)
+        return reverse('haijiao_list_page', args=[tab, target])
 
     return render(request, 'haijiao_list.html', {
         'tab': tab,
@@ -193,15 +200,109 @@ def haijiao_list(request, tab, page=1):
         'pagination': {'links': pager.build(page, total_pages, page_url)},
         'empty': not items,
         'breadcrumbs': [
-            {'label': '首页', 'href': '/'},
-            {'label': '海角社区', 'href': '/haijiao/list.html'},
+            {'label': _('首页'), 'href': reverse('home')},
+            {'label': _('海角社区'), 'href': reverse('haijiao_index')},
             {'label': haijiao.TAB_LABELS.get(tab, tab)},
         ],
     })
 
 
+def haijiao_home(request):
+    """网站首页：直接渲染海角社区「热帖」第 1 页（内容等同频道首页）
+
+    本站现在只保留海角社区一个频道，所以首页就是海角首页；
+    非首页的别名（如 <语言前缀>/index/）统一收敛回首页。
+    """
+    home_url = reverse('home')
+    if request.path != home_url:
+        return redirect(home_url)
+    return _render_list_page(request, tab='hot', page=1, home=True)
+
+
+def haijiao_index(request):
+    """海角社区列表首页（热帖第 1 页）：/haijiao/list.html"""
+    return haijiao_list(request, tab='hot', page=1)
+
+
+def haijiao_list(request, tab, page=1):
+    """海角列表：按栏目取内容列表（每页 20 条），带分页
+
+    tab 必须是 6 个合法值之一（hot/news/events/original/essence/latest），
+    否则 404 —— 海角接口对非法 tab 返回 PARAM_VALUE_INVALID，没必要专门
+    渲染一个空壳页。
+    """
+    if tab not in haijiao.TABS:
+        raise Http404(_('未知的海角栏目: %(tab)s') % {'tab': tab})
+    page = max(1, int(page))
+
+    # 地址收敛：hot 第 1 页 = 首页地址；其他栏目第 1 页 = 不带页码；第 N 页带页码
+    canonical = _list_canonical(tab, page)
+    if request.path != canonical:
+        query = request.META.get('QUERY_STRING', '')
+        return redirect(canonical + (f'?{query}' if query else ''), permanent=True)
+
+    return _render_list_page(request, tab, page)
+
+
+def _locked_page(request, title, desc, crumb):
+    """渲染「需在 App 内使用」的拦截页（帖子详情 / 搜索 / 登录 / 个人中心 共用）
+
+    本站网页端只保留可静态化的内容（列表、排行榜）；其余功能引导去 App 内使用。
+    """
+    return render(request, 'haijiao_locked.html', {
+        'locked_title': title,
+        'locked_desc': desc,
+        'breadcrumbs': [
+            {'label': _('首页'), 'href': reverse('home')},
+            {'label': crumb},
+        ],
+    })
+
+
 def haijiao_topic(request, topic_id):
-    """帖子详情：标题 / 作者 / 正文 / 图片 / 视频附件 / 评论
+    """帖子详情：本站内容需在 App 内观看，详情正文不再对外展示
+
+    直接访问（搜索、外链、收藏、手输地址）一律只给「下载 App」指引页；
+    点卡片则是在当前页弹下载框、不跳转（见 common_html/app_download_modal.html）。
+    完整的详情渲染逻辑保留在 _render_topic_detail()，恢复 App 内浏览时直接复用。
+    """
+    return _locked_page(
+        request,
+        _('内容需在 App 内观看'),
+        _('本站内容已迁移到 App 内浏览，请下载安装后观看。'),
+        _('内容需在 App 内观看'),
+    )
+
+
+def locked_search(request):
+    """搜索：网页端不提供（要连小影接口、无法静态化），引导去 App 内使用"""
+    return _locked_page(
+        request, _('搜索'),
+        _('搜索需在 App 内使用，请下载安装后在 App 内搜索。'),
+        _('搜索'),
+    )
+
+
+def locked_login(request):
+    """登录 / 注册：网页端不提供，引导去 App 内使用"""
+    return _locked_page(
+        request, _('登录'),
+        _('登录需在 App 内使用，请下载安装后在 App 内登录。'),
+        _('登录'),
+    )
+
+
+def locked_account(request):
+    """个人中心：网页端不提供，引导去 App 内使用"""
+    return _locked_page(
+        request, _('个人中心'),
+        _('个人中心需在 App 内使用，请下载安装后在 App 内查看。'),
+        _('个人中心'),
+    )
+
+
+def _render_topic_detail(request, topic_id):
+    """（暂未启用）完整的帖子详情渲染：标题 / 作者 / 正文 / 图片 / 视频附件 / 评论
 
     接口的 content 字段是源站正文 HTML（含混淆图片地址），本站直接渲染到模板。
     模板里把 <img src="混淆地址"> 替换为 /api/haijiao/image?url=... 的完整 URL。
@@ -260,9 +361,9 @@ def haijiao_topic(request, topic_id):
         # 评论另起一个 AJAX/分页加载；首屏先塞前 20 条
         'comments': ((haijiao.get_comments(topic_id, 1) or {}).get('results')) or [],
         'breadcrumbs': [
-            {'label': '首页', 'href': '/'},
-            {'label': '海角社区', 'href': '/haijiao/list.html'},
-            {'label': (data.get('title') or '帖子详情')[:40]},
+            {'label': _('首页'), 'href': reverse('home')},
+            {'label': _('海角社区'), 'href': reverse('haijiao_index')},
+            {'label': (data.get('title') or _('帖子详情'))[:40]},
         ],
     })
 
@@ -281,11 +382,11 @@ def haijiao_play(request, topic_id, attachment_id):
             'topic_id': topic_id,
             'attachment_id': attachment_id,
             'ready': False,
-            'error': '视频取不到：可能账号已失效，或该附件已被源站删除。',
+            'error': _('视频取不到：可能账号已失效，或该附件已被源站删除。'),
             'breadcrumbs': [
-                {'label': '首页', 'href': '/'},
-                {'label': '海角社区', 'href': '/haijiao/list.html'},
-                {'label': '视频播放'},
+                {'label': _('首页'), 'href': reverse('home')},
+                {'label': _('海角社区'), 'href': reverse('haijiao_index')},
+                {'label': _('视频播放')},
             ],
         }, status=404)
     return HttpResponse(
@@ -317,17 +418,19 @@ def haijiao_search(request):
     """
     keyword = (request.GET.get('key') or '').strip()
     if not keyword:
-        return redirect('/haijiao/list.html')
+        return redirect(reverse('haijiao_index'))
     page = pager.positive_int(request.GET.get('page'))
     data = haijiao.get_search(keyword, page) or {}
     items = haijiao_cards.cards(data.get('results'))
     meta = data.get('pagination') or {}
     total_pages = pager.positive_int(meta.get('total_page') or meta.get('total'), default=page)
 
+    search_url = reverse('haijiao_search')
+
     def page_url(target):
         target = min(max(1, int(target)), total_pages)
         qs = quote(keyword, safe='')
-        return f'/haijiao/search.html?key={qs}' + ('' if target == 1 else f'&page={target}')
+        return f'{search_url}?key={qs}' + ('' if target == 1 else f'&page={target}')
 
     return render(request, 'haijiao_search.html', {
         'keyword': keyword,
@@ -338,9 +441,9 @@ def haijiao_search(request):
         'pagination': {'links': pager.build(page, total_pages, page_url)},
         'empty': not items,
         'breadcrumbs': [
-            {'label': '首页', 'href': '/'},
-            {'label': '海角社区', 'href': '/haijiao/list.html'},
-            {'label': f'搜索「{keyword}」'},
+            {'label': _('首页'), 'href': reverse('home')},
+            {'label': _('海角社区'), 'href': reverse('haijiao_index')},
+            {'label': _('搜索「%(kw)s」') % {'kw': keyword}},
         ],
     })
 
@@ -352,13 +455,13 @@ def haijiao_ranking(request):
     和源站的 tab 语义一致；tab 切换是普通链接，不依赖 JS。
     """
     ranking = _rank_context(request.GET.get('board'), request.GET.get('period'),
-                            base='/haijiao/ranking.html')
+                            base=reverse('haijiao_ranking'))
     return render(request, 'haijiao_ranking.html', {
         'ranking': ranking,
         'account': haijiao_auth.current(request),
         'breadcrumbs': [
-            {'label': '首页', 'href': '/'},
-            {'label': '海角社区', 'href': '/haijiao/list.html'},
-            {'label': '排行榜'},
+            {'label': _('首页'), 'href': reverse('home')},
+            {'label': _('海角社区'), 'href': reverse('haijiao_index')},
+            {'label': _('排行榜')},
         ],
     })

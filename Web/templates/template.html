@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+{% load i18n %}{% get_current_language as CUR_LANG %}<!DOCTYPE html>
+<html lang="{% if CUR_LANG == 'zh-hans' %}zh-CN{% else %}pt-BR{% endif %}">
 
 <head>
     <meta charset="UTF-8" />
@@ -9,11 +9,11 @@
     <meta name="baidu-site-verification" content="codeva-D86XF7EVRs" />
     <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
-    <title>{% block title %}{{ SITE_NAME_ALT }} - {{ SITE_NAME }} - 免费在线影视{% endblock %}</title>
+    <title>{% block title %}{% blocktrans trimmed %}{{ SITE_NAME_ALT }} - {{ SITE_NAME }} - 免费在线影视{% endblocktrans %}{% endblock %}</title>
     <meta name="keywords"
-        content="{% block keywords %}{{ SITE_NAME }},{{ SITE_NAME_ALT }},免费影视,在线看电影,在线追剧,高清免费电影,电视剧在线观看,动漫在线看,综艺免费看{% endblock %}" />
+        content="{% block keywords %}{{ SITE_NAME }},{{ SITE_NAME_ALT }},{% trans '免费影视' %},{% trans '在线看电影' %},{% trans '在线追剧' %},{% trans '高清免费电影' %},{% trans '电视剧在线观看' %},{% trans '动漫在线看' %},{% trans '综艺免费看' %}{% endblock %}" />
     <meta name="description"
-        content="{% block description %}{{ SITE_BRAND }}免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。{% endblock %}" />
+        content="{% block description %}{% blocktrans trimmed %}{{ SITE_BRAND }}免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。{% endblocktrans %}{% endblock %}" />
     <!-- 搜索引擎爬虫：默认允许收录；空数据页（接口失败/筛选页）在各自模板里覆盖为 noindex, follow -->
     <meta name="robots" content="{% block robots %}index, follow{% endblock %}" />
     {% comment %}
@@ -22,17 +22,23 @@
     {% endcomment %}
     <link rel="canonical"
         href="{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}" />
+    {% comment %}
+    hreflang：告诉搜索引擎这些地址是同一页的不同语言版本（页面路由带语言前缀，
+    工具类端点不带，由上下文处理器只对带前缀的路径输出）。
+    {% endcomment %}
+    {% for alt in language_alternates %}<link rel="alternate" hreflang="{{ alt.code }}" href="{{ request.scheme }}://{{ request.get_host }}{{ alt.url }}" />
+    {% endfor %}
     <link rel="icon" href="/media/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/media/apple-touch-icon.png" />
     <!-- Open Graph：社交平台分享时生成卡片，各页面可覆盖 block 定制 -->
     <meta property="og:site_name" content="{{ SITE_NAME }}" />
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
-    <meta property="og:title" content="{% block og_title %}{{ SITE_NAME_ALT }} - 免费在线影视{% endblock %}" />
-    <meta property="og:description" content="{% block og_description %}{{ SITE_BRAND }}免费在线影视站，免注册、免登录，打开网页即可在线观看。{% endblock %}" />
+    <meta property="og:title" content="{% block og_title %}{% blocktrans trimmed %}{{ SITE_NAME_ALT }} - 免费在线影视{% endblocktrans %}{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}{% blocktrans trimmed %}{{ SITE_BRAND }}免费在线影视站，免注册、免登录，打开网页即可在线观看。{% endblocktrans %}{% endblock %}" />
     <meta property="og:url" content="{% block og_url %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}" />
     {# 分享配图：默认用站点 Logo，详情页覆盖为该片海报（不设置的话微信/微博分享就是一张白卡） #}
     <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}/media/logo.png{% endblock %}" />
-    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale" content="{% if CUR_LANG == 'zh-hans' %}zh_CN{% else %}pt_BR{% endif %}" />
     <!-- 结构化数据（schema.org）：声明站点信息与站内搜索，助力搜索引擎理解网站 -->
     <script type="application/ld+json">
     {
@@ -64,42 +70,38 @@
     <!-- 全站样式：output.css 由 input.css 编译产出（Tailwind CSS + daisyUI），模板新增类名后需重编译 -->
     <link rel="stylesheet" href="/static/css/output.css?v={{ STATIC_VERSION }}" />
     {# JS 也带版本号（与 output.css 同理），改动脚本后手动 +1，避免浏览器继续用缓存里的旧脚本 #}
-    <script src="/static/js/common.js?v=7" defer></script>
+    <script src="/static/js/common.js?v=9" defer></script>
 
     {% block head %}{% endblock %}
 </head>
 
 <body class="bg-base-100 text-base-content">
     {% comment %}
-    全站布局用 daisyUI 抽屉：
-      ≥lg —— 左侧侧边栏常驻（drawer-open），分类导航不再占用顶部空间；
-      <lg —— 侧边栏收起，页头汉堡按钮拉出（同一份导航，只有一份 DOM）。
+    全站布局：顶部页头（导航 / 搜索 / 账号统一收在页头，见 common_html/headers.html）
+    + 内容区 + 页脚。原「左侧侧边栏 + 抽屉」已下架，页面不再有抽屉结构。
     {% endcomment %}
-    <div class="drawer lg:drawer-open">
-        <input id="xy-drawer" type="checkbox" class="drawer-toggle" />
-
-        <div class="drawer-content flex min-h-screen flex-col">
-            {% include 'common_html/headers.html' %}
-            {% comment %}
-            操作结果提示（海角社区的签到 / 点赞 / 关注 / 打赏等写操作，POST-Redirect-GET 后落地）：
-            只在真的有 messages 时渲染，其余页面/频道零输出，不引入任何全局行为。
-            由 common.js 在几秒后移除，避免长期遮住右上角。
-            {% endcomment %}
-            {% if messages %}
-            <div class="toast toast-top toast-end z-[9999] mt-20" id="xy-messages">
-                {% for message in messages %}
-                <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} text-sm shadow-lg">
-                    <span>{{ message }}</span>
-                </div>
-                {% endfor %}
+    <div class="flex min-h-screen flex-col">
+        {% include 'common_html/headers.html' %}
+        {% comment %}
+        操作结果提示（海角社区的签到 / 点赞 / 关注 / 打赏等写操作，POST-Redirect-GET 后落地）：
+        只在真的有 messages 时渲染，其余页面/频道零输出，不引入任何全局行为。
+        由 common.js 在几秒后移除，避免长期遮住右上角。
+        {% endcomment %}
+        {% if messages %}
+        <div class="toast toast-top toast-end z-[9999] mt-20" id="xy-messages">
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} text-sm shadow-lg">
+                <span>{{ message }}</span>
             </div>
-            {% endif %}
-            <main class="flex-1">{% block content %}{% endblock %}</main>
-            {% include 'common_html/footer.html' %}
+            {% endfor %}
         </div>
-
-        {% include 'common_html/sidebar.html' %}
+        {% endif %}
+        <main class="flex-1">{% block content %}{% endblock %}</main>
+        {% include 'common_html/footer.html' %}
     </div>
+
+    {# App 下载弹窗（全站共用）：页头「下载 App」与帖子卡片点击时弹出 #}
+    {% include 'common_html/app_download_modal.html' %}
 
     {% block js %}{% endblock %}
 </body>

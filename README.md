@@ -1,6 +1,6 @@
-![小影影视 Logo](media/logo.png)
+![Prazer Logo](media/logo.png)
 
-# 小影影视 · XiaoYingMovie
+# Prazer · 快感
 
 **基于小影 API 的影视站前端：只做「好看的壳 + 稳健的取数」**
 
@@ -177,8 +177,8 @@ XIAOYING_MOVIE_PLAY_CACHE_MINUTES=30
 XIAOYING_MOVIE_SEARCH_CACHE_MINUTES=30
 
 # ---- 站点品牌与联系方式（改名/换联系方式只改这里）----
-SITE_NAME=小影影视
-SITE_NAME_ALT=小影电影
+SITE_NAME=Prazer
+SITE_NAME_ALT=快感
 # SITE_BRAND=           # 可选；SEO 文案里的品牌短语，留空则按「副名（主名）」自动拼
 SITE_CONTACT_EMAIL=contact#example.com
 SITE_CONTACT_WECHAT=your_wechat
@@ -235,7 +235,7 @@ daisyUI 插件已随仓库提供（`Web/static-src/css/daisyui.mjs`），无需 
 | `XIAOYING_MOVIE_CACHE_HOURS` | `6` | 分类/首页/列表/详情/筛选 缓存小时数 |
 | `XIAOYING_MOVIE_PLAY_CACHE_MINUTES` | `30` | 播放地址缓存分钟数（m3u8 带时效，故较短） |
 | `XIAOYING_MOVIE_SEARCH_CACHE_MINUTES` | `30` | 搜索结果缓存分钟数 |
-| `SITE_NAME` / `SITE_NAME_ALT` | 小影影视 / 小影电影 | 站点主名 / 副名（SEO 标题、结构化数据） |
+| `SITE_NAME` / `SITE_NAME_ALT` | Prazer / 快感 | 站点主名 / 副名（SEO 标题、结构化数据） |
 | `SITE_BRAND` | 自动拼 | SEO 文案里的品牌短语，留空则取「副名（主名）」 |
 | `SITE_CONTACT_EMAIL` | `contact#example.com` | 页脚免责声明邮箱（用 `#` 代替 `@` 防爬虫） |
 | `SITE_CONTACT_WECHAT` / `SITE_CONTACT_TG` | 空 | 页脚「联系我们」弹窗内容，留空则该项不显示 |
@@ -245,8 +245,8 @@ daisyUI 插件已随仓库提供（`Web/static-src/css/daisyui.mjs`），无需 
 ## 项目结构
 
 ```text
-XiaoYingMovie/
-├── XiaoYingMovie/            # 项目配置
+Prazer/
+├── Prazer/                   # 项目配置
 │   ├── settings.py           #   站点配置、缓存、Context Processor、中间件
 │   └── urls.py               #   根路由 + robots.txt / sitemap.xml / 静态媒体服务
 ├── API/                      # 小影 API 接入层（唯一会发网络请求的地方）
@@ -342,7 +342,7 @@ XiaoYingMovie/
 **1. 拉代码、建环境、装依赖**
 
 ```bash
-cd /srv && git clone <你的仓库地址> XiaoYingMovie && cd XiaoYingMovie
+cd /srv && git clone <你的仓库地址> Prazer && cd Prazer
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```
@@ -365,23 +365,23 @@ mkdir -p cache media/pic && chown -R www-data:www-data cache media
 **4. 用 waitress 起服务**
 
 ```bash
-.venv/bin/python -m waitress --listen=127.0.0.1:8000 --threads=8 XiaoYingMovie.wsgi:application
+.venv/bin/python -m waitress --listen=127.0.0.1:8000 --threads=8 Prazer.wsgi:application
 ```
 
 > 线程数建议 8 起：取数与图片代理都是阻塞 IO，线程给够才不会互相排队。
 
-**5. 交给 systemd 常驻**（`/etc/systemd/system/xiaoyingmovie.service`）
+**5. 交给 systemd 常驻**（`/etc/systemd/system/prazer.service`）
 
 ```ini
 [Unit]
-Description=XiaoYingMovie (waitress)
+Description=Prazer (waitress)
 After=network.target
 
 [Service]
 User=www-data
-WorkingDirectory=/srv/XiaoYingMovie
-EnvironmentFile=/srv/XiaoYingMovie/.env
-ExecStart=/srv/XiaoYingMovie/.venv/bin/python -m waitress --listen=127.0.0.1:8000 --threads=8 XiaoYingMovie.wsgi:application
+WorkingDirectory=/srv/Prazer
+EnvironmentFile=/srv/Prazer/.env
+ExecStart=/srv/Prazer/.venv/bin/python -m waitress --listen=127.0.0.1:8000 --threads=8 Prazer.wsgi:application
 Restart=always
 RestartSec=3
 
@@ -390,7 +390,7 @@ WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl daemon-reload && sudo systemctl enable --now xiaoyingmovie
+sudo systemctl daemon-reload && sudo systemctl enable --now prazer
 ```
 
 **6. Nginx 反代 + 静态直出**
@@ -406,8 +406,8 @@ server {
     gzip_min_length 1k;
 
     # 静态与媒体交给 Nginx，省掉一层 Python（注意 alias 结尾的斜杠）
-    location /static/ { alias /srv/XiaoYingMovie/Web/static/; expires 30d; access_log off; }
-    location /media/  { alias /srv/XiaoYingMovie/media/;      expires 30d; access_log off; }
+    location /static/ { alias /srv/Prazer/Web/static/; expires 30d; access_log off; }
+    location /media/  { alias /srv/Prazer/media/;      expires 30d; access_log off; }
 
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -436,15 +436,15 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 同一个 waitress 命令即可（PowerShell）：
 
 ```powershell
-.venv\Scripts\python.exe -m waitress --listen=0.0.0.0:8000 --threads=8 XiaoYingMovie.wsgi:application
+.venv\Scripts\python.exe -m waitress --listen=0.0.0.0:8000 --threads=8 Prazer.wsgi:application
 ```
 
 想开机自启 + 崩溃重启，用 [NSSM](https://nssm.cc/) 把上面的命令注册成服务：
 
 ```powershell
-nssm install XiaoYingMovie "P:\XiaoYingMovie\.venv\Scripts\python.exe" "-m waitress --listen=0.0.0.0:8000 --threads=8 XiaoYingMovie.wsgi:application"
-nssm set XiaoYingMovie AppDirectory "P:\XiaoYingMovie"
-nssm start XiaoYingMovie
+nssm install Prazer "P:\Prazer\.venv\Scripts\python.exe" "-m waitress --listen=0.0.0.0:8000 --threads=8 Prazer.wsgi:application"
+nssm set Prazer AppDirectory "P:\Prazer"
+nssm start Prazer
 ```
 
 对外可以用 IIS 的 ARR 反向代理，或直接前置一个 Nginx for Windows。
@@ -504,4 +504,4 @@ nssm start XiaoYingMovie
 
 ## 许可
 
-[MIT](LICENSE) © 2026 小影
+[MIT](LICENSE) © 2026 Prazer

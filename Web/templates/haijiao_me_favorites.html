@@ -18,8 +18,6 @@
 {% endcomment %}
 <section class="mx-auto w-full max-w-7xl px-4 py-6">
     {% include 'common_html/breadcrumbs.html' %}
-    {% include 'common_html/haijiao_user_bar.html' %}
-
     <h1 class="mt-4 flex items-center gap-2 text-2xl font-bold sm:text-3xl">
         {% include 'common_html/haijiao_icon.html' with name='bookmark' class='h-6 w-6 shrink-0 opacity-70' %}
         我的收藏
@@ -40,7 +38,7 @@
     <details class="mt-3 rounded-box border border-base-300 bg-base-100 px-3 py-2">
         <summary class="cursor-pointer text-xs text-base-content/70">管理收藏夹</summary>
         <div class="mt-3 flex flex-wrap items-start gap-4">
-            <form method="post" action="/haijiao/action/favorite-folder.html" class="flex items-center gap-2">
+            <form method="post" action="{% url 'haijiao_favorite_folder' %}" class="flex items-center gap-2">
                 <input type="hidden" name="action" value="add" />
                 <input type="hidden" name="next" value="{{ request.get_full_path }}" />
                 {% include 'common_html/haijiao_icon.html' with name='folder' %}
@@ -50,7 +48,7 @@
             </form>
 
             {% if folder_id != '0' %}
-            <form method="post" action="/haijiao/action/favorite-folder.html" class="flex items-center gap-2">
+            <form method="post" action="{% url 'haijiao_favorite_folder' %}" class="flex items-center gap-2">
                 <input type="hidden" name="action" value="rename" />
                 <input type="hidden" name="folder_id" value="{{ folder_id }}" />
                 <input type="hidden" name="next" value="{{ request.get_full_path }}" />
@@ -59,7 +57,7 @@
                     value="{{ current_folder_name }}" class="input input-sm input-bordered w-52" />
                 <button type="submit" class="btn btn-sm btn-outline">重命名</button>
             </form>
-            <form method="post" action="/haijiao/action/favorite-folder.html">
+            <form method="post" action="{% url 'haijiao_favorite_folder' %}">
                 <input type="hidden" name="action" value="delete" />
                 <input type="hidden" name="folder_id" value="{{ folder_id }}" />
                 <input type="hidden" name="next" value="/haijiao/me/favorites.html" />
@@ -81,7 +79,7 @@
         {% for item in items %}
         <div>
             {% include 'common_html/movie_card.html' with item=item detail_base='/haijiao/topic' show_stats=True %}
-            <form method="post" action="/haijiao/action/favorite.html" class="mt-1">
+            <form method="post" action="{% url 'haijiao_favorite' %}" class="mt-1">
                 <input type="hidden" name="topic_id" value="{{ item.id }}" />
                 <input type="hidden" name="action" value="remove" />
                 <input type="hidden" name="next" value="{{ request.get_full_path }}" />

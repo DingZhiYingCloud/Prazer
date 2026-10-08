@@ -121,6 +121,42 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+/* ============ 语言切换（页脚下拉框） ============
+ * 页脚的 <select name="language"> 一变就提交到 Django 的 /i18n/setlang/，
+ * 由它写入语言 cookie 并把当前页翻译成对应语言前缀（见 common_html/footer.html）。
+ * 只作用于挂了 data-language-switch 的表单，其它表单不受影响。
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    var forms = document.querySelectorAll('[data-language-switch]');
+    for (var i = 0; i < forms.length; i++) {
+        var select = forms[i].querySelector('select[name="language"]');
+        if (!select) continue;
+        select.addEventListener('change', function () {
+            this.form.submit();
+        });
+    }
+});
+
+/* ============ App 下载弹窗 ============
+ * 本站详情需在 App 内观看：点帖子卡片（movie_card 上的 [data-app-download] 链接）或页头
+ * 「下载 App」按钮时，不跳转，改为弹出下载弹窗（#xy-app-download，见
+ * common_html/app_download_modal.html）。弹窗里按平台列出入口，全部指向本地 /download。
+ * 只在页面上确实存在该弹窗时才挂监听，其它页面零开销。
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    var dialog = document.getElementById('xy-app-download');
+    if (!dialog || typeof dialog.showModal !== 'function') return;
+    document.addEventListener('click', function (event) {
+        var trigger = event.target.closest ? event.target.closest('[data-app-download]') : null;
+        if (!trigger) return;
+        // 组合键 / 中键 / 右键仍交给浏览器（不改默认行为），便于需要时打开原地址
+        if (event.defaultPrevented || event.button !== 0) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        dialog.showModal();
+    });
+});
+
 /* ============ 图片：加载失败兜底 ============
  * load / error 不冒泡，所以在捕获阶段监听：
  *   加载失败 → 换成兜底图（media/placeholder.png），并标记避免兜底图自身失败时死循环。
@@ -335,6 +371,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         var link = e.target.closest && e.target.closest('a');
         if (!link) return;
+        if (link.hasAttribute('data-app-download')) return; // 弹下载弹窗，不发起导航
         if (link.target === '_blank' || link.hasAttribute('download')) return;
         var href = link.getAttribute('href') || '';
         if (!href || href.charAt(0) === '#') return;

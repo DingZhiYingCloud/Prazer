@@ -1,3 +1,4 @@
+{% load i18n %}
 <footer class="mt-10 border-t border-base-300 bg-base-200">
     <div class="mx-auto w-full max-w-7xl px-4 py-10">
         {% comment %}
@@ -10,18 +11,17 @@
                 <div class="flex items-center gap-2">
                     {% include 'common_html/logo_mark.html' with cls="h-8 w-8 shrink-0" %}
                     <span class="text-lg font-bold">{{ SITE_NAME }}</span>
-                    <span class="badge badge-primary badge-sm">免费</span>
+                    <span class="badge badge-primary badge-sm">{% trans '免费' %}</span>
                 </div>
                 <p class="mt-3 max-w-md text-sm leading-relaxed opacity-70">
-                    {{ SITE_BRAND }}——免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，
-                    免注册、免登录，打开网页即可在线观看。
+                    {% blocktrans trimmed %}{{ SITE_BRAND }}——免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。{% endblocktrans %}
                 </p>
                 {# 联系方式：值全部来自 .env（见 Web/services/site_info.py），换联系方式不用动模板 #}
                 {% if SITE_CONTACT_WECHAT or SITE_CONTACT_TG or SITE_CONTACT_EMAIL %}
                 <ul class="mt-4 space-y-1 text-sm opacity-70">
-                    {% if SITE_CONTACT_WECHAT %}<li>微信：{{ SITE_CONTACT_WECHAT }}</li>{% endif %}
+                    {% if SITE_CONTACT_WECHAT %}<li>{% trans '微信' %}：{{ SITE_CONTACT_WECHAT }}</li>{% endif %}
                     {% if SITE_CONTACT_TG %}<li>Telegram：{{ SITE_CONTACT_TG }}</li>{% endif %}
-                    {% if SITE_CONTACT_EMAIL %}<li>邮箱：{{ SITE_CONTACT_EMAIL }}</li>{% endif %}
+                    {% if SITE_CONTACT_EMAIL %}<li>{% trans '邮箱' %}：{{ SITE_CONTACT_EMAIL }}</li>{% endif %}
                 </ul>
                 {% endif %}
                 {% comment %}
@@ -39,7 +39,7 @@
                             <circle cx="9" cy="11" r="2" />
                             <path d="M6.4 16c.6-1.4 1.5-2 2.6-2s2 .6 2.6 2M14.5 10.5h4M14.5 14h4" />
                         </svg>
-                        开发者联系方式
+                        {% trans '开发者联系方式' %}
                     </button>
                     <a href="{% url 'feedback' %}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -47,31 +47,53 @@
                             aria-hidden="true">
                             <path d="M21 12a8 8 0 0 1-8 8H8l-5 3 1.2-4.2A8 8 0 1 1 21 12z" />
                         </svg>
-                        意见反馈
+                        {% trans '意见反馈' %}
                     </a>
                 </div>
             </div>
 
             <nav>
-                <h2 class="footer-title mb-3 font-semibold opacity-60">频道入口</h2>
+                <h2 class="footer-title mb-3 font-semibold opacity-60">{% trans '频道入口' %}</h2>
+                {# 本站现只有海角社区一个频道；原分类接口的 nav_categories 已随影视频道下架，不再输出死链 #}
                 <ul class="space-y-2 text-sm">
-                    <li><a class="link link-hover" href="/">首页</a></li>
-                    {% for category in nav_categories %}
-                    <li><a class="link link-hover" href="/list/{{ category.id }}.html">{{ category.name }}</a></li>
-                    {% endfor %}
+                    <li><a class="link link-hover" href="{% url 'home' %}">{% trans '首页' %}</a></li>
+                    <li><a class="link link-hover" href="{% url 'haijiao_list' 'news' %}">{% trans '新闻' %}</a></li>
+                    <li><a class="link link-hover" href="{% url 'haijiao_list' 'events' %}">{% trans '大事记' %}</a></li>
+                    <li><a class="link link-hover" href="{% url 'haijiao_list' 'original' %}">{% trans '原创' %}</a></li>
+                    <li><a class="link link-hover" href="{% url 'haijiao_list' 'essence' %}">{% trans '精华' %}</a></li>
+                    <li><a class="link link-hover" href="{% url 'haijiao_list' 'latest' %}">{% trans '最新' %}</a></li>
+                    <li><a class="link link-hover" href="{% url 'haijiao_ranking' %}">{% trans '排行榜' %}</a></li>
                 </ul>
             </nav>
 
             {% include 'common_html/friend_links.html' %}
         </div>
 
-        <div class="mt-8 space-y-1 border-t border-base-300 pt-6 text-xs leading-relaxed opacity-60">
-            <p>郑重声明：本站为非商业的个人技术学习项目，不设会员、不插播广告；站内不存储、也不出售任何影片文件，
-                播放地址均由程序实时取自第三方公开来源，本站不对第三方内容的可用性与合法性负责。</p>
-            <p>免责声明：站内影片、海报等内容的著作权归原作者及版权方所有，本站仅供个人学习与交流使用，
-                请勿用于任何商业用途；喜欢请支持正版。</p>
-            <p>侵权处理：若本站收录的内容无意侵犯了你的权益，请来信告知 {{ SITE_CONTACT_EMAIL }}，我们会尽快核实并处理。</p>
-            <p class="pt-2">&copy; {% now "Y" %} {{ SITE_NAME }} · 本站不存储任何影片文件</p>
+        {# 语言切换：下拉框。选项来自 settings.LANGUAGES，以后加语言会自动出现 #}
+        <div class="mt-8 flex flex-wrap items-center justify-end gap-2 border-t border-base-300 pt-6">
+            <form action="{% url 'set_language' %}" method="post" class="flex items-center gap-2"
+                data-language-switch>
+                <input name="next" type="hidden" value="{{ request.path }}" />
+                <label for="xy-language" class="text-xs opacity-60">{% trans '语言' %}</label>
+                {% get_current_language as CUR_LOCALE %}
+                {% get_available_languages as AVAILABLE_LANGUAGES %}
+                <select id="xy-language" name="language"
+                    class="rounded-box border border-base-300 bg-base-100 px-3 py-2 text-sm"
+                    aria-label="{% trans '切换语言' %}">
+                    {% for code, name in AVAILABLE_LANGUAGES %}
+                    <option value="{{ code }}"{% if code == CUR_LOCALE %} selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+                {# 没有 JS 时的兜底按钮 #}
+                <noscript><button type="submit" class="btn btn-ghost btn-sm">{% trans '切换' %}</button></noscript>
+            </form>
+        </div>
+
+        <div class="mt-4 space-y-1 text-xs leading-relaxed opacity-60">
+            <p>{% blocktrans trimmed %}郑重声明：本站为非商业的个人技术学习项目，不设会员、不插播广告；站内不存储、也不出售任何影片文件，播放地址均由程序实时取自第三方公开来源，本站不对第三方内容的可用性与合法性负责。{% endblocktrans %}</p>
+            <p>{% blocktrans trimmed %}免责声明：站内影片、海报等内容的著作权归原作者及版权方所有，本站仅供个人学习与交流使用，请勿用于任何商业用途；喜欢请支持正版。{% endblocktrans %}</p>
+            <p>{% blocktrans trimmed %}侵权处理：若本站收录的内容无意侵犯了你的权益，请来信告知 {{ SITE_CONTACT_EMAIL }}，我们会尽快核实并处理。{% endblocktrans %}</p>
+            <p class="pt-2">&copy; {% now "Y" %} {{ SITE_NAME }} · {% trans '本站不存储任何影片文件' %}</p>
         </div>
     </div>
 </footer>
@@ -85,21 +107,21 @@ GET /api/feedback/contacts?app_id=<APPID>），由小影后台按项目统一维
 {% endcomment %}
 <dialog id="xy-devcontact-modal" class="modal">
     <div class="modal-box">
-        <h3 class="text-lg font-bold">开发者联系方式</h3>
-        <p class="mt-1 text-xs opacity-60">由小影问题反馈中心统一维护</p>
+        <h3 class="text-lg font-bold">{% trans '开发者联系方式' %}</h3>
+        <p class="mt-1 text-xs opacity-60">{% trans '由小影问题反馈中心统一维护' %}</p>
         <ul id="xy-devcontact-list" class="mt-4 space-y-3 text-sm">
-            <li class="opacity-60" id="xy-devcontact-loading">正在加载…</li>
+            <li class="opacity-60" id="xy-devcontact-loading">{% trans '正在加载…' %}</li>
         </ul>
         <div id="xy-devcontact-fallback" class="mt-4 hidden">
-            <p class="text-xs opacity-60">暂时取不到在线联系方式，可先用下面这些：</p>
+            <p class="text-xs opacity-60">{% trans '暂时取不到在线联系方式，可先用下面这些：' %}</p>
             <ul class="mt-2 space-y-1 text-sm">
-                {% if SITE_CONTACT_WECHAT %}<li>微信：<span class="break-words font-bold">{{ SITE_CONTACT_WECHAT }}</span></li>{% endif %}
+                {% if SITE_CONTACT_WECHAT %}<li>{% trans '微信' %}：<span class="break-words font-bold">{{ SITE_CONTACT_WECHAT }}</span></li>{% endif %}
                 {% if SITE_CONTACT_TG %}<li>Telegram：<span class="break-words font-bold">{{ SITE_CONTACT_TG }}</span></li>{% endif %}
-                {% if SITE_CONTACT_EMAIL %}<li>邮箱：<span class="break-words font-bold">{{ SITE_CONTACT_EMAIL }}</span></li>{% endif %}
+                {% if SITE_CONTACT_EMAIL %}<li>{% trans '邮箱' %}：<span class="break-words font-bold">{{ SITE_CONTACT_EMAIL }}</span></li>{% endif %}
             </ul>
         </div>
         <div class="modal-action">
-            <form method="dialog"><button class="btn btn-ghost btn-sm">关闭</button></form>
+            <form method="dialog"><button class="btn btn-ghost btn-sm">{% trans '关闭' %}</button></form>
         </div>
     </div>
     <form method="dialog" class="modal-backdrop"><button>close</button></form>

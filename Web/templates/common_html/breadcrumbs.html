@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 面包屑导航
 
@@ -9,7 +10,7 @@
       最后一项不传 href 表示当前位置（不可点、自动截断）。为空则不渲染。
 {% endcomment %}
 {% if breadcrumbs %}
-<nav class="flex items-center gap-1.5 overflow-hidden text-sm text-base-content/60" aria-label="面包屑导航">
+<nav class="flex items-center gap-1.5 overflow-hidden text-sm text-base-content/60" aria-label="{% trans '面包屑导航' %}">
     {% for crumb in breadcrumbs %}
     {% if not forloop.first %}
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

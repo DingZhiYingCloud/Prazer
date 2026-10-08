@@ -18,6 +18,7 @@ import logging
 
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.urls import reverse
 
 from API.apis import haijiao
 from Web.services import haijiao_auth
@@ -32,33 +33,35 @@ def _back(request, fallback, message, level='success'):
 
 
 def _topic_fallback(topic_id):
-    """操作对象是帖子时，跳回帖子详情页"""
-    return f'/haijiao/topic/{topic_id}.html' if str(topic_id).isdigit() else '/haijiao/list.html'
+    """操作对象是帖子时，跳回帖子详情页（地址走 reverse，带语言前缀）"""
+    if str(topic_id).isdigit():
+        return reverse('haijiao_topic', args=[topic_id])
+    return reverse('haijiao_index')
 
 
 @haijiao_auth.login_required
 def haijiao_sign_in(request):
     """每日签到（源站 20 金币/天；当天重复调用由源站判为已签到）"""
     if request.method != 'POST':
-        return redirect('/haijiao/me.html')
+        return redirect(reverse('haijiao_me'))
     account = request.hj_account
     data, msg = haijiao.sign_in(account['user_id'], account['token'])
     if data is None:
-        return _back(request, '/haijiao/me.html', f'签到失败：{msg}', 'error')
+        return _back(request, reverse('haijiao_me'), f'签到失败：{msg}', 'error')
 
     state = data.get('state')
     if state == 'signed':
-        return _back(request, '/haijiao/me.html', f'签到成功，金币 +{data.get("amount") or 0}')
+        return _back(request, reverse('haijiao_me'), f'签到成功，金币 +{data.get("amount") or 0}')
     if state == 'already':
-        return _back(request, '/haijiao/me.html', '今天已经签到过了，明天再来', 'info')
-    return _back(request, '/haijiao/me.html', '签到任务暂时未开放', 'info')
+        return _back(request, reverse('haijiao_me'), '今天已经签到过了，明天再来', 'info')
+    return _back(request, reverse('haijiao_me'), '签到任务暂时未开放', 'info')
 
 
 @haijiao_auth.login_required
 def haijiao_like(request):
     """点赞 / 取消点赞（帖子详情页按钮）"""
     if request.method != 'POST':
-        return redirect('/haijiao/list.html')
+        return redirect(reverse('haijiao_index'))
     topic_id = (request.POST.get('topic_id') or '').strip()
     fallback = _topic_fallback(topic_id)
     if not topic_id:
@@ -76,9 +79,9 @@ def haijiao_like(request):
 def haijiao_follow(request):
     """关注 / 取消关注用户（帖子里的作者）"""
     if request.method != 'POST':
-        return redirect('/haijiao/list.html')
+        return redirect(reverse('haijiao_index'))
     target_user_id = (request.POST.get('target_user_id') or '').strip()
-    fallback = (request.POST.get('next') or '/haijiao/list.html').strip()
+    fallback = (request.POST.get('next') or reverse('haijiao_index')).strip()
     if not target_user_id.isdigit():
         return _back(request, fallback, '缺少用户 ID', 'error')
 
@@ -94,7 +97,7 @@ def haijiao_follow(request):
 def haijiao_give(request):
     """打赏：给帖子作者送一份礼物（**真实扣金币 / 钻石**）"""
     if request.method != 'POST':
-        return redirect('/haijiao/list.html')
+        return redirect(reverse('haijiao_index'))
     topic_id = (request.POST.get('topic_id') or '').strip()
     fallback = _topic_fallback(topic_id)
     if not topic_id:
@@ -122,8 +125,11 @@ def haijiao_give(request):
 
 # 源站对收藏夹名称的限制（1-12 位字符）：本地先卡一道，省一次注定被拒的请求
 FOLDER_NAME_MAX = 12
-# 收藏夹相关写操作的默认回跳页
-FAVORITES_PAGE = '/haijiao/me/favorites.html'
+
+
+def _favorites_page():
+    """收藏夹相关写操作的默认回跳页（地址走 reverse，带语言前缀）"""
+    return reverse('haijiao_me_favorites')
 
 
 @haijiao_auth.login_required
@@ -135,7 +141,7 @@ def haijiao_favorite(request):
     重复收藏源站也回成功，所以这里不先查再收。
     """
     if request.method != 'POST':
-        return redirect('/haijiao/list.html')
+        return redirect(reverse('haijiao_index'))
     topic_id = (request.POST.get('topic_id') or '').strip()
     fallback = _topic_fallback(topic_id)
     if not topic_id.isdigit():
@@ -173,14 +179,14 @@ def haijiao_favorite_folder(request):
     「已存在!」——页面上已写明，这里不做特殊处理。
     """
     if request.method != 'POST':
-        return redirect(FAVORITES_PAGE)
+        return redirect(_favorites_page())
     action = request.POST.get('action') or 'add'
     folder_id = (request.POST.get('folder_id') or '').strip()
     folder_name = (request.POST.get('folder_name') or '').strip()
     topic_id = (request.POST.get('topic_id') or '').strip()
     # 兜底回跳用常量或从 topic_id 推导：页面传来的 next（可能是 ?folder_id= 的当前页）
     # 由 _back → safe_next 收敛后再用，避免把访客可控的字符串当跳转目标（开放重定向）。
-    fallback = _topic_fallback(topic_id) if topic_id.isdigit() else FAVORITES_PAGE
+    fallback = _topic_fallback(topic_id) if topic_id.isdigit() else _favorites_page()
 
     account = request.hj_account
     user_id, token = account['user_id'], account['token']

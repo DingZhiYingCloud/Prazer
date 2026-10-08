@@ -43,7 +43,7 @@
                 {% include 'common_html/haijiao_icon.html' with name='login' %}
                 登录
             </button>
-            <a href="/haijiao/register.html" class="link link-hover flex items-center gap-1.5 text-sm">
+            <a href="{% url 'haijiao_register' %}" class="link link-hover flex items-center gap-1.5 text-sm">
                 {% include 'common_html/haijiao_icon.html' with name='user-plus' %}
                 没有账号？注册一个
             </a>

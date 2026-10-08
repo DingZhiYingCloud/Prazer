@@ -1,0 +1,365 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Prazer\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "搜海角帖子"
+msgstr "搜海角帖子"
+
+msgid "搜索海角社区帖子"
+msgstr "搜索海角社区帖子"
+
+msgid "搜索"
+msgstr "搜索"
+
+msgid "下载 App"
+msgstr "下载 App"
+
+msgid "个人中心"
+msgstr "个人中心"
+
+msgid "退出登录"
+msgstr "退出登录"
+
+msgid "退出"
+msgstr "退出"
+
+msgid "登录"
+msgstr "登录"
+
+msgid "切换深色 / 浅色"
+msgstr "切换深色 / 浅色"
+
+msgid "切换深色 / 浅色模式"
+msgstr "切换深色 / 浅色模式"
+
+msgid "海角栏目导航"
+msgstr "海角栏目导航"
+
+msgid "热帖"
+msgstr "热帖"
+
+msgid "新闻"
+msgstr "新闻"
+
+msgid "大事记"
+msgstr "大事记"
+
+msgid "原创"
+msgstr "原创"
+
+msgid "精华"
+msgstr "精华"
+
+msgid "最新"
+msgstr "最新"
+
+msgid "排行榜"
+msgstr "排行榜"
+
+msgid "频道入口"
+msgstr "频道入口"
+
+msgid "首页"
+msgstr "首页"
+
+msgid "免费"
+msgstr "免费"
+
+msgid "微信"
+msgstr "微信"
+
+msgid "邮箱"
+msgstr "邮箱"
+
+msgid "开发者联系方式"
+msgstr "开发者联系方式"
+
+msgid "意见反馈"
+msgstr "意见反馈"
+
+msgid "由小影问题反馈中心统一维护"
+msgstr "由小影问题反馈中心统一维护"
+
+msgid "正在加载…"
+msgstr "正在加载…"
+
+msgid "暂时取不到在线联系方式，可先用下面这些："
+msgstr "暂时取不到在线联系方式，可先用下面这些："
+
+msgid "关闭"
+msgstr "关闭"
+
+msgid "本站不存储任何影片文件"
+msgstr "本站不存储任何影片文件"
+
+msgid "%(SITE_BRAND)s——免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。"
+msgstr "%(SITE_BRAND)s——免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。"
+
+msgid ""
+"郑重声明：本站为非商业的个人技术学习项目，不设会员、不插播广告；站内不存储、也不出售任何影片文件，播放地址均由程序实时取自第三方公开来源，本站不对第三方内容的可用性与合法性负责。"
+msgstr ""
+"郑重声明：本站为非商业的个人技术学习项目，不设会员、不插播广告；站内不存储、也不出售任何影片文件，播放地址均由程序实时取自第三方公开来源，本站不对第三方内容的可用性与合法性负责。"
+
+msgid "免责声明：站内影片、海报等内容的著作权归原作者及版权方所有，本站仅供个人学习与交流使用，请勿用于任何商业用途；喜欢请支持正版。"
+msgstr "免责声明：站内影片、海报等内容的著作权归原作者及版权方所有，本站仅供个人学习与交流使用，请勿用于任何商业用途；喜欢请支持正版。"
+
+msgid "侵权处理：若本站收录的内容无意侵犯了你的权益，请来信告知 %(SITE_CONTACT_EMAIL)s，我们会尽快核实并处理。"
+msgstr "侵权处理：若本站收录的内容无意侵犯了你的权益，请来信告知 %(SITE_CONTACT_EMAIL)s，我们会尽快核实并处理。"
+
+msgid "查看详情"
+msgstr "查看详情"
+
+msgid "下载 App 观看"
+msgstr "下载 App 观看"
+
+msgid "本站内容需在 App 内观看，请按你的设备下载安装。"
+msgstr "本站内容需在 App 内观看，请按你的设备下载安装。"
+
+msgid "平板"
+msgstr "平板"
+
+msgid ""
+"安装后打开 App 即可浏览全部内容。iOS / macOS 若提示「未受信任的开发者」，请到「设置 - 通用 - VPN 与设备管理」中信任后再打开。"
+msgstr ""
+"安装后打开 App 即可浏览全部内容。iOS / macOS 若提示「未受信任的开发者」，请到「设置 - 通用 - VPN 与设备管理」中信任后再打开。"
+
+msgid "内容需在 App 内观看"
+msgstr "内容需在 App 内观看"
+
+msgid "本站内容需在 App 内观看，请下载安装后浏览。"
+msgstr "本站内容需在 App 内观看，请下载安装后浏览。"
+
+msgid "本站内容已迁移到 App 内浏览，请下载安装后观看。"
+msgstr "本站内容已迁移到 App 内浏览，请下载安装后观看。"
+
+msgid "页面未找到"
+msgstr "页面未找到"
+
+msgid "你访问的页面不存在或已被删除，请返回首页继续浏览。"
+msgstr "你访问的页面不存在或已被删除，请返回首页继续浏览。"
+
+msgid "抱歉，页面不存在"
+msgstr "抱歉，页面不存在"
+
+msgid "你访问的页面可能已被删除、改名，或者链接输错了。"
+msgstr "你访问的页面可能已被删除、改名，或者链接输错了。"
+
+msgid "返回首页"
+msgstr "返回首页"
+
+msgid "返回上一页"
+msgstr "返回上一页"
+
+msgid "服务器错误"
+msgstr "服务器错误"
+
+msgid "服务器开小差了，请稍后重试或返回首页继续浏览。"
+msgstr "服务器开小差了，请稍后重试或返回首页继续浏览。"
+
+msgid "抱歉，服务器开小差了"
+msgstr "抱歉，服务器开小差了"
+
+msgid "服务器遇到一些问题，请稍后重试，或返回首页继续浏览。"
+msgstr "服务器遇到一些问题，请稍后重试，或返回首页继续浏览。"
+
+msgid "面包屑导航"
+msgstr "面包屑导航"
+
+msgid "%(SITE_NAME_ALT)s - %(SITE_NAME)s - 免费在线影视"
+msgstr "%(SITE_NAME_ALT)s - %(SITE_NAME)s - 免费在线影视"
+
+msgid "%(SITE_BRAND)s免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。"
+msgstr "%(SITE_BRAND)s免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。"
+
+msgid "%(SITE_NAME_ALT)s - 免费在线影视"
+msgstr "%(SITE_NAME_ALT)s - 免费在线影视"
+
+msgid "%(SITE_BRAND)s免费在线影视站，免注册、免登录，打开网页即可在线观看。"
+msgstr "%(SITE_BRAND)s免费在线影视站，免注册、免登录，打开网页即可在线观看。"
+
+msgid "免费影视"
+msgstr "免费影视"
+
+msgid "在线看电影"
+msgstr "在线看电影"
+
+msgid "在线追剧"
+msgstr "在线追剧"
+
+msgid "高清免费电影"
+msgstr "高清免费电影"
+
+msgid "电视剧在线观看"
+msgstr "电视剧在线观看"
+
+msgid "动漫在线看"
+msgstr "动漫在线看"
+
+msgid "综艺免费看"
+msgstr "综艺免费看"
+
+msgid "上一页"
+msgstr "上一页"
+
+msgid "下一页"
+msgstr "下一页"
+
+msgid "海角社区"
+msgstr "海角社区"
+
+msgid "粉丝"
+msgstr "粉丝"
+
+msgid "获赞"
+msgstr "获赞"
+
+msgid "人气"
+msgstr "人气"
+
+msgid "数值"
+msgstr "数值"
+
+msgid "版面"
+msgstr "版面"
+
+msgid "未知的海角栏目: %(tab)s"
+msgstr "未知的海角栏目: %(tab)s"
+
+msgid "视频取不到：可能账号已失效，或该附件已被源站删除。"
+msgstr "视频取不到：可能账号已失效，或该附件已被源站删除。"
+
+msgid "视频播放"
+msgstr "视频播放"
+
+msgid "搜索「%(kw)s」"
+msgstr "搜索「%(kw)s」"
+
+msgid "帖子详情"
+msgstr "帖子详情"
+
+msgid "粉丝榜"
+msgstr "粉丝榜"
+
+msgid "点赞榜"
+msgstr "点赞榜"
+
+msgid "人气榜"
+msgstr "人气榜"
+
+msgid "总榜"
+msgstr "总榜"
+
+msgid "月榜"
+msgstr "月榜"
+
+msgid "周榜"
+msgstr "周榜"
+
+msgid "免费社区"
+msgstr "免费社区"
+
+msgid "在线社区"
+msgstr "在线社区"
+
+msgid "%(SITE_BRAND)s海角社区频道，匿名免登录浏览"
+msgstr "%(SITE_BRAND)s海角社区频道，匿名免登录浏览"
+
+msgid "第 %(page)s 页"
+msgstr "第 %(page)s 页"
+
+msgid "共 %(n)s 页"
+msgid_plural "共 %(n)s 页"
+msgstr[0] "共 %(n)s 页"
+msgstr[1] "共 %(n)s 页"
+
+msgid "这个栏目暂时取不到内容，稍后刷新试试。"
+msgstr "这个栏目暂时取不到内容，稍后刷新试试。"
+
+msgid "回到海角首页"
+msgstr "回到海角首页"
+
+msgid "海角社区搜索"
+msgstr "海角社区搜索"
+
+msgid "搜索「%(keyword)s」"
+msgstr "搜索「%(keyword)s」"
+
+msgid "海角社区关键词「%(keyword)s」的搜索结果"
+msgstr "海角社区关键词「%(keyword)s」的搜索结果"
+
+msgid "搜索「%(keyword)s」- 海角社区"
+msgstr "搜索「%(keyword)s」- 海角社区"
+
+msgid "，共 %(total_pages)s 页"
+msgstr "，共 %(total_pages)s 页"
+
+msgid "这一页没有内容了，往前翻翻看。"
+msgstr "这一页没有内容了，往前翻翻看。"
+
+msgid "没找到与「%(keyword)s」相关的帖子。"
+msgstr "没找到与「%(keyword)s」相关的帖子。"
+
+msgid "海角社区排行榜"
+msgstr "海角社区排行榜"
+
+msgid "海角社区%(b)s%(p)s - 排行榜"
+msgstr "海角社区%(b)s%(p)s - 排行榜"
+
+msgid "海角社区%(b)s（%(p)s）共 %(t)s 位用户，按源站公开榜单实时展示。"
+msgstr "海角社区%(b)s（%(p)s）共 %(t)s 位用户，按源站公开榜单实时展示。"
+
+msgid "海角社区%(b)s%(p)s"
+msgstr "海角社区%(b)s%(p)s"
+
+msgid "粉丝榜 / 点赞榜 / 人气榜，每张榜另有总榜、月榜、周榜。排名与数值来自海角社区公开榜单。"
+msgstr "粉丝榜 / 点赞榜 / 人气榜，每张榜另有总榜、月榜、周榜。排名与数值来自海角社区公开榜单。"
+
+msgid "查看完整榜单"
+msgstr "查看完整榜单"
+
+msgid "榜单"
+msgstr "榜单"
+
+msgid "周期"
+msgstr "周期"
+
+msgid "共 %(n)s 人"
+msgid_plural "共 %(n)s 人"
+msgstr[0] "共 %(n)s 人"
+msgstr[1] "共 %(n)s 人"
+
+msgid "这个榜单暂时取不到数据，换个榜单或稍后刷新试试。"
+msgstr "这个榜单暂时取不到数据，换个榜单或稍后刷新试试。"
+
+msgid "返回海角首页"
+msgstr "返回海角首页"
+
+msgid "语言"
+msgstr "语言"
+
+msgid "切换语言"
+msgstr "切换语言"
+
+msgid "切换"
+msgstr "切换"
+
+msgid "%(n)s 阅读"
+msgstr "%(n)s 阅读"
+
+msgid "%(n)s 评论"
+msgstr "%(n)s 评论"
+
+msgid "搜索需在 App 内使用，请下载安装后在 App 内搜索。"
+msgstr "搜索需在 App 内使用，请下载安装后在 App 内搜索。"
+
+msgid "登录需在 App 内使用，请下载安装后在 App 内登录。"
+msgstr "登录需在 App 内使用，请下载安装后在 App 内登录。"
+
+msgid "个人中心需在 App 内使用，请下载安装后在 App 内查看。"
+msgstr "个人中心需在 App 内使用，请下载安装后在 App 内查看。"

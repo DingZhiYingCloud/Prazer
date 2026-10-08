@@ -1,31 +1,61 @@
-{# 页头：极简。分类导航已移到左侧侧边栏，这里只留 汉堡（窄屏）+ logo（窄屏）+ 搜索 + 主题切换 #}
+{% load i18n %}
+{% comment %}
+全站页头（原「左侧侧边栏」已下架，频道导航统一收进这里）：
+  第一行 —— 站点 logo/站名 + 海角搜索框 + 下载 App + 账号入口（登录 / 个人中心 / 退出）+ 深浅色切换；
+  第二行 —— 栏目导航（6 大栏目 + 排行榜）+ 语言切换（PT / 中），窄屏时栏目横向滚动、语言切换常驻右侧。
+
+本站当前只有海角社区一个频道，搜索框固定搜海角帖子（普通 GET 表单 → /haijiao/search.html，
+不依赖 JS）。当前栏目高亮用列表页传入的 tab，排行榜高亮看当前路径。
+所有站内链接一律走 {% url %}，这样切换语言时会自动带上对应语言前缀。
+{% endcomment %}
+{% url 'haijiao_ranking' as ranking_url %}
 <header class="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur">
-    <div class="navbar mx-auto w-full gap-2 px-3 py-2 sm:px-4">
+    <div class="mx-auto w-full px-3 sm:px-4">
 
-        <label for="xy-drawer" class="btn btn-ghost btn-square shrink-0 lg:hidden" aria-label="打开菜单">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
-                <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-        </label>
+        <div class="flex items-center gap-2 py-2">
+            <a href="{% url 'home' %}" class="flex min-w-0 shrink-0 items-center gap-2" title="{{ SITE_NAME }}">
+                {% include 'common_html/logo_mark.html' with cls="h-8 w-8" %}
+                <span class="hidden truncate text-lg font-bold tracking-tight sm:inline">{{ SITE_NAME }}</span>
+            </a>
 
-        {% comment %}
-        logo：手机（窄于 sm）不显示 —— 那里站点名文字本来就隐藏，只剩一个孤零零的图标；
-        从 sm 起显示图标，并带上站点名（见下面的 span）。
-        注意：这里必须用 {% comment %} 包裹，Django 的 {# #} 只支持单行。
-        {% endcomment %}
-        <a href="/" class="hidden shrink-0 items-center gap-2 sm:flex lg:hidden" title="{{ SITE_NAME }}">
-            {% include 'common_html/logo_mark.html' with cls="h-7 w-7" %}
-            <span class="hidden text-base font-bold tracking-tight sm:inline">{{ SITE_NAME }}</span>
-        </a>
-
-        <div class="ml-auto flex w-full min-w-0 items-center gap-1 sm:max-w-sm">
-            <div class="min-w-0 flex-1">
-                {% include 'common_html/search_box.html' %}
+            {# 搜索：网页端不提供搜索（无法静态化），点一下直接弹下载弹窗，引导去 App 内搜索 #}
+            <div class="ml-auto flex min-w-0 flex-1 items-center gap-1 sm:max-w-sm">
+                <button type="button" data-app-download
+                    class="flex w-full items-center gap-2 rounded-box border border-base-300 bg-base-100 px-3 py-2 text-sm text-base-content/60"
+                    aria-label="{% trans '搜索海角社区帖子' %}" title="{% trans '搜索' %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="h-4 w-4 shrink-0 opacity-50" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m20 20-3.2-3.2" />
+                    </svg>
+                    <span class="truncate">{% trans '搜海角帖子' %}</span>
+                </button>
             </div>
+
+            {# 下载 App：打开全站共用的下载弹窗（结构见 common_html/app_download_modal.html） #}
+            <button type="button" data-app-download class="btn btn-outline btn-sm shrink-0 gap-1.5"
+                title="{% trans '下载 App' %}" aria-label="{% trans '下载 App' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0"
+                    aria-hidden="true">
+                    <path d="M12 3v12" />
+                    <path d="m7 10 5 5 5-5" />
+                    <path d="M5 21h14" />
+                </svg>
+                <span class="hidden sm:inline">{% trans '下载 App' %}</span>
+            </button>
+
+            {# 登录：网页端不提供登录（无法静态化），点一下弹下载弹窗，引导去 App 内登录 #}
+            <button type="button" data-app-download class="btn btn-primary btn-sm shrink-0 gap-1.5"
+                title="{% trans '登录' %}" aria-label="{% trans '登录' %}">
+                {% include 'common_html/haijiao_icon.html' with name='login' %}
+                <span class="hidden sm:inline">{% trans '登录' %}</span>
+            </button>
+
             {# 深浅色切换：图标由 data-theme 决定显示哪一个（见 input.css），JS 只负责翻转主题 #}
             <button type="button" data-theme-toggle class="btn btn-ghost btn-circle btn-sm shrink-0"
-                title="切换深色 / 浅色" aria-label="切换深色 / 浅色模式">
+                title="{% trans '切换深色 / 浅色' %}" aria-label="{% trans '切换深色 / 浅色模式' %}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                     class="xy-theme-moon h-4 w-4" aria-hidden="true">
@@ -39,5 +69,24 @@
                 </svg>
             </button>
         </div>
+
+        {# 第二行：栏目导航（窄屏横向滚动）。语言切换在页脚（见 footer.html） #}
+        <nav class="flex items-center gap-1 overflow-x-auto pb-2" aria-label="{% trans '海角栏目导航' %}">
+            <a href="{% url 'home' %}" class="xy-filter-pill shrink-0 {% if tab == 'hot' %}is-active{% endif %}"
+                {% if tab == 'hot' %}aria-current="true"{% endif %}>{% trans '热帖' %}</a>
+            <a href="{% url 'haijiao_list' 'news' %}" class="xy-filter-pill shrink-0 {% if tab == 'news' %}is-active{% endif %}"
+                {% if tab == 'news' %}aria-current="true"{% endif %}>{% trans '新闻' %}</a>
+            <a href="{% url 'haijiao_list' 'events' %}" class="xy-filter-pill shrink-0 {% if tab == 'events' %}is-active{% endif %}"
+                {% if tab == 'events' %}aria-current="true"{% endif %}>{% trans '大事记' %}</a>
+            <a href="{% url 'haijiao_list' 'original' %}" class="xy-filter-pill shrink-0 {% if tab == 'original' %}is-active{% endif %}"
+                {% if tab == 'original' %}aria-current="true"{% endif %}>{% trans '原创' %}</a>
+            <a href="{% url 'haijiao_list' 'essence' %}" class="xy-filter-pill shrink-0 {% if tab == 'essence' %}is-active{% endif %}"
+                {% if tab == 'essence' %}aria-current="true"{% endif %}>{% trans '精华' %}</a>
+            <a href="{% url 'haijiao_list' 'latest' %}" class="xy-filter-pill shrink-0 {% if tab == 'latest' %}is-active{% endif %}"
+                {% if tab == 'latest' %}aria-current="true"{% endif %}>{% trans '最新' %}</a>
+            <a href="{% url 'haijiao_ranking' %}"
+                class="xy-filter-pill shrink-0 {% if request.path == ranking_url %}is-active{% endif %}"
+                {% if request.path == ranking_url %}aria-current="true"{% endif %}>{% trans '排行榜' %}</a>
+        </nav>
     </div>
 </header>

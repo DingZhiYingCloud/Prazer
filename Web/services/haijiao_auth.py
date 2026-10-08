@@ -22,12 +22,16 @@
 from functools import wraps
 from urllib.parse import quote
 
+from django.conf import settings
 from django.shortcuts import redirect
+from django.urls import reverse
 
 # 会话键：一次性放一个 dict，避免多个键各自丢失导致"半登录"状态
 SESSION_KEY = 'hj_account'
 
-LOGIN_URL = '/haijiao/login.html'
+# 站内页面的合法前缀：页面路由都带语言前缀（/pt-br/haijiao/… 或 /zh-hans/haijiao/…），
+# safe_next 用它把 next 收敛成站内地址，避免被当成开放重定向的跳板。
+_HAIJIAO_PATH_PREFIXES = tuple(f'/{code}/haijiao/' for code, _name in settings.LANGUAGES)
 
 
 def login_session(request, data):
@@ -59,6 +63,20 @@ def logout(request):
     request.session.pop(SESSION_KEY, None)
 
 
+def header_context(request):
+    """模板上下文处理器：给全站页头提供登录态
+
+    页头在每一个页面都会渲染，而各视图是否传 account 并不统一，
+    所以这里统一从会话取一次，模板用 header_account 判断显示「登录」还是「个人中心」。
+    未登录时值为 None。
+    """
+    # 会话中间件没跑到时（例如中间件自身报错后的 500 处理链路）request.session 不存在，
+    # 这里必须兜住 —— 否则错误页会因为页头取登录态而二次崩溃。
+    if not hasattr(request, 'session'):
+        return {'header_account': None}
+    return {'header_account': current(request)}
+
+
 def login_required(view):
     """视图装饰器：未登录跳登录页，并把原地址带在 next 上，登录后跳回去
 
@@ -69,16 +87,21 @@ def login_required(view):
         account = current(request)
         if account is None:
             nxt = quote(request.get_full_path(), safe='')
-            return redirect(f'{LOGIN_URL}?next={nxt}')
+            return redirect(f'{reverse("haijiao_login")}?next={nxt}')
         request.hj_account = account
         return view(request, *args, **kwargs)
 
     return wrapper
 
 
-def safe_next(request, fallback='/haijiao/me.html'):
-    """把 next 收敛成站内地址，避免被当成开放跳板（只认 /haijiao/ 开头的相对路径）"""
+def safe_next(request, fallback=None):
+    """把 next 收敛成站内地址，避免被当成开放跳板
+
+    只接受「带本站语言前缀的站内相对路径」（/pt-br/haijiao/… 或 /zh-hans/haijiao/…），
+    其余一律回落到 fallback（默认个人中心）。
+    """
+    fallback = fallback or reverse('haijiao_me')
     target = (request.POST.get('next') or request.GET.get('next') or '').strip()
-    if target.startswith('/haijiao/') and '//' not in target:
+    if target.startswith(_HAIJIAO_PATH_PREFIXES) and '//' not in target:
         return target
     return fallback

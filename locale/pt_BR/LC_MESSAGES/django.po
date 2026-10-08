@@ -1,0 +1,383 @@
+# Prazer · 巴西葡语（pt_BR）翻译
+#
+# msgid 一律用界面里的**中文原文**；中文站点不需要单独的目录，未命中的条目
+# 会直接回退成 msgid（也就是中文），所以这里只维护葡语。
+#
+# 本机没有 GNU gettext（msgfmt/xgettext），修改本文件后用 polib 编译成 .mo：
+#   .venv\Scripts\python.exe -c "import polib; polib.pofile(r'locale/pt_BR/LC_MESSAGES/django.po').save_as_mofile(r'locale/pt_BR/LC_MESSAGES/django.mo')"
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Prazer\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# ============ 页头 / 导航 ============
+msgid "搜海角帖子"
+msgstr "Buscar posts"
+
+msgid "搜索海角社区帖子"
+msgstr "Buscar posts na comunidade Haijiao"
+
+msgid "搜索"
+msgstr "Buscar"
+
+msgid "下载 App"
+msgstr "Baixar o app"
+
+msgid "个人中心"
+msgstr "Minha conta"
+
+msgid "退出登录"
+msgstr "Sair"
+
+msgid "退出"
+msgstr "Sair"
+
+msgid "登录"
+msgstr "Entrar"
+
+msgid "切换深色 / 浅色"
+msgstr "Alternar tema claro / escuro"
+
+msgid "切换深色 / 浅色模式"
+msgstr "Alternar modo claro / escuro"
+
+msgid "海角栏目导航"
+msgstr "Navegação de seções do Haijiao"
+
+msgid "热帖"
+msgstr "Populares"
+
+msgid "新闻"
+msgstr "Notícias"
+
+msgid "大事记"
+msgstr "Eventos"
+
+msgid "原创"
+msgstr "Originais"
+
+msgid "精华"
+msgstr "Destaques"
+
+msgid "最新"
+msgstr "Recentes"
+
+msgid "排行榜"
+msgstr "Rankings"
+
+# ============ 页脚 ============
+msgid "频道入口"
+msgstr "Seções"
+
+msgid "首页"
+msgstr "Início"
+
+msgid "免费"
+msgstr "Grátis"
+
+msgid "微信"
+msgstr "WeChat"
+
+msgid "邮箱"
+msgstr "E-mail"
+
+msgid "开发者联系方式"
+msgstr "Contato do desenvolvedor"
+
+msgid "意见反馈"
+msgstr "Enviar feedback"
+
+msgid "由小影问题反馈中心统一维护"
+msgstr "Mantido pelo centro de feedback do Prazer"
+
+msgid "正在加载…"
+msgstr "Carregando…"
+
+msgid "暂时取不到在线联系方式，可先用下面这些："
+msgstr "Não foi possível obter os contatos online agora; use os abaixo:"
+
+msgid "关闭"
+msgstr "Fechar"
+
+msgid "本站不存储任何影片文件"
+msgstr "Este site não armazena nenhum arquivo de vídeo"
+
+msgid "%(SITE_BRAND)s——免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。"
+msgstr "%(SITE_BRAND)s — site de streaming gratuito que reúne filmes, séries, animes e variedades. Sem cadastro e sem login: é só abrir a página e assistir."
+
+msgid "郑重声明：本站为非商业的个人技术学习项目，不设会员、不插播广告；站内不存储、也不出售任何影片文件，播放地址均由程序实时取自第三方公开来源，本站不对第三方内容的可用性与合法性负责。"
+msgstr "Aviso: este é um projeto pessoal de estudo, sem fins comerciais, sem assinatura e sem anúncios. Não armazenamos nem vendemos arquivos de vídeo; os links de reprodução vêm de fontes públicas de terceiros e não nos responsabilizamos pela disponibilidade ou legalidade do conteúdo de terceiros."
+
+msgid "免责声明：站内影片、海报等内容的著作权归原作者及版权方所有，本站仅供个人学习与交流使用，请勿用于任何商业用途；喜欢请支持正版。"
+msgstr "Isenção de responsabilidade: filmes, pôsteres e demais conteúdos pertencem aos autores e detentores dos direitos. Este site destina-se apenas a estudo e uso pessoal; não use para fins comerciais. Apoie os originais."
+
+msgid "侵权处理：若本站收录的内容无意侵犯了你的权益，请来信告知 %(SITE_CONTACT_EMAIL)s，我们会尽快核实并处理。"
+msgstr "Direitos autorais: se algum conteúdo deste site violar, sem intenção, os seus direitos, envie um e-mail para %(SITE_CONTACT_EMAIL)s e verificaremos o mais rápido possível."
+
+# ============ 卡片 / App 下载弹窗 ============
+msgid "查看详情"
+msgstr "Ver detalhes"
+
+msgid "下载 App 观看"
+msgstr "Baixe o app para assistir"
+
+msgid "本站内容需在 App 内观看，请按你的设备下载安装。"
+msgstr "O conteúdo deste site está disponível apenas no app. Baixe a versão para o seu dispositivo."
+
+msgid "平板"
+msgstr "Tablet"
+
+msgid "安装后打开 App 即可浏览全部内容。iOS / macOS 若提示「未受信任的开发者」，请到「设置 - 通用 - VPN 与设备管理」中信任后再打开。"
+msgstr "Após instalar, abra o app para ver todo o conteúdo. No iOS / macOS, se aparecer “Desenvolvedor não confiável”, autorize em “Ajustes - Geral - VPN e Gerenciamento de Dispositivo”."
+
+# ============ 帖子详情（拦截页） ============
+msgid "内容需在 App 内观看"
+msgstr "Conteúdo disponível no app"
+
+msgid "本站内容需在 App 内观看，请下载安装后浏览。"
+msgstr "O conteúdo deste site está disponível no app. Baixe e instale para navegar."
+
+msgid "本站内容已迁移到 App 内浏览，请下载安装后观看。"
+msgstr "O conteúdo foi movido para o app. Baixe e instale para assistir."
+
+# ============ 错误页 ============
+msgid "页面未找到"
+msgstr "Página não encontrada"
+
+msgid "你访问的页面不存在或已被删除，请返回首页继续浏览。"
+msgstr "A página que você procura não existe ou foi removida. Volte ao início para continuar navegando."
+
+msgid "抱歉，页面不存在"
+msgstr "Desculpe, a página não existe"
+
+msgid "你访问的页面可能已被删除、改名，或者链接输错了。"
+msgstr "A página pode ter sido removida, renomeada ou o link está incorreto."
+
+msgid "返回首页"
+msgstr "Voltar ao início"
+
+msgid "返回上一页"
+msgstr "Voltar"
+
+msgid "服务器错误"
+msgstr "Erro do servidor"
+
+msgid "服务器开小差了，请稍后重试或返回首页继续浏览。"
+msgstr "O servidor teve um problema. Tente novamente mais tarde ou volte ao início."
+
+msgid "抱歉，服务器开小差了"
+msgstr "Desculpe, o servidor teve um problema"
+
+msgid "服务器遇到一些问题，请稍后重试，或返回首页继续浏览。"
+msgstr "O servidor encontrou um problema. Tente novamente mais tarde ou volte ao início."
+
+msgid "面包屑导航"
+msgstr "Navegação estrutural"
+
+# ============ 站点默认描述 / 关键词（template.html） ============
+msgid "%(SITE_NAME_ALT)s - %(SITE_NAME)s - 免费在线影视"
+msgstr "%(SITE_NAME_ALT)s - %(SITE_NAME)s - Streaming grátis"
+
+msgid "%(SITE_BRAND)s免费在线影视站，聚合电影、连续剧、动漫、综艺等资源，免注册、免登录，打开网页即可在线观看。"
+msgstr "%(SITE_BRAND)s site de streaming gratuito que reúne filmes, séries, animes e variedades. Sem cadastro e sem login: é só abrir a página e assistir."
+
+msgid "%(SITE_NAME_ALT)s - 免费在线影视"
+msgstr "%(SITE_NAME_ALT)s - Streaming grátis"
+
+msgid "%(SITE_BRAND)s免费在线影视站，免注册、免登录，打开网页即可在线观看。"
+msgstr "%(SITE_BRAND)s site de streaming gratuito. Sem cadastro e sem login: é só abrir a página e assistir."
+
+msgid "免费影视"
+msgstr "Filmes e séries grátis"
+
+msgid "在线看电影"
+msgstr "Assistir filmes online"
+
+msgid "在线追剧"
+msgstr "Maratonar séries online"
+
+msgid "高清免费电影"
+msgstr "Filmes grátis em HD"
+
+msgid "电视剧在线观看"
+msgstr "Assistir séries online"
+
+msgid "动漫在线看"
+msgstr "Assistir animes online"
+
+msgid "综艺免费看"
+msgstr "Variedades grátis"
+
+# ============ 分页 ============
+msgid "上一页"
+msgstr "Anterior"
+
+msgid "下一页"
+msgstr "Próxima"
+
+# ============ 海角社区（Python 侧标签 / 面包屑） ============
+msgid "海角社区"
+msgstr "Comunidade Haijiao"
+
+msgid "粉丝"
+msgstr "Seguidores"
+
+msgid "获赞"
+msgstr "Curtidas"
+
+msgid "人气"
+msgstr "Popularidade"
+
+msgid "数值"
+msgstr "Valor"
+
+msgid "版面"
+msgstr "Fórum"
+
+msgid "未知的海角栏目: %(tab)s"
+msgstr "Seção desconhecida do Haijiao: %(tab)s"
+
+msgid "视频取不到：可能账号已失效，或该附件已被源站删除。"
+msgstr "Vídeo indisponível: a conta pode ter expirado ou o anexo foi removido pela origem."
+
+msgid "视频播放"
+msgstr "Reprodução de vídeo"
+
+msgid "搜索「%(kw)s」"
+msgstr "Busca por “%(kw)s”"
+
+msgid "帖子详情"
+msgstr "Detalhes do post"
+
+msgid "粉丝榜"
+msgstr "Ranking de fãs"
+
+msgid "点赞榜"
+msgstr "Ranking de curtidas"
+
+msgid "人气榜"
+msgstr "Ranking de popularidade"
+
+msgid "总榜"
+msgstr "Geral"
+
+msgid "月榜"
+msgstr "Mensal"
+
+msgid "周榜"
+msgstr "Semanal"
+
+# ============ 列表页 ============
+msgid "免费社区"
+msgstr "comunidade grátis"
+
+msgid "在线社区"
+msgstr "comunidade online"
+
+msgid "%(SITE_BRAND)s海角社区频道，匿名免登录浏览"
+msgstr "Canal da comunidade Haijiao do %(SITE_BRAND)s. Navegue anonimamente, sem login."
+
+msgid "第 %(page)s 页"
+msgstr "Página %(page)s"
+
+msgid "共 %(n)s 页"
+msgid_plural "共 %(n)s 页"
+msgstr[0] "Total de %(n)s página"
+msgstr[1] "Total de %(n)s páginas"
+
+msgid "这个栏目暂时取不到内容，稍后刷新试试。"
+msgstr "Não foi possível carregar este conteúdo agora. Tente atualizar mais tarde."
+
+msgid "回到海角首页"
+msgstr "Voltar à página inicial do Haijiao"
+
+# ============ 搜索页 ============
+msgid "海角社区搜索"
+msgstr "Busca na comunidade Haijiao"
+
+msgid "搜索「%(keyword)s」"
+msgstr "Busca por “%(keyword)s”"
+
+msgid "海角社区关键词「%(keyword)s」的搜索结果"
+msgstr "Resultados de busca para “%(keyword)s” na comunidade Haijiao"
+
+msgid "搜索「%(keyword)s」- 海角社区"
+msgstr "Busca por “%(keyword)s” - Comunidade Haijiao"
+
+msgid "，共 %(total_pages)s 页"
+msgstr ", %(total_pages)s páginas no total"
+
+msgid "这一页没有内容了，往前翻翻看。"
+msgstr "Não há mais conteúdo nesta página. Veja as anteriores."
+
+msgid "没找到与「%(keyword)s」相关的帖子。"
+msgstr "Nenhum post encontrado para “%(keyword)s”."
+
+# ============ 排行榜 ============
+msgid "海角社区排行榜"
+msgstr "Ranking da comunidade Haijiao"
+
+msgid "海角社区%(b)s%(p)s - 排行榜"
+msgstr "%(b)s%(p)s da comunidade Haijiao - Ranking"
+
+msgid "海角社区%(b)s（%(p)s）共 %(t)s 位用户，按源站公开榜单实时展示。"
+msgstr "Ranking %(b)s (%(p)s) da comunidade Haijiao: %(t)s usuários, exibidos em tempo real a partir do ranking público da origem."
+
+msgid "海角社区%(b)s%(p)s"
+msgstr "Ranking %(b)s%(p)s da comunidade Haijiao"
+
+msgid "粉丝榜 / 点赞榜 / 人气榜，每张榜另有总榜、月榜、周榜。排名与数值来自海角社区公开榜单。"
+msgstr "Rankings de fãs, curtidas e popularidade, cada um com versões geral, mensal e semanal. Posições e valores vêm do ranking público da comunidade Haijiao."
+
+msgid "查看完整榜单"
+msgstr "Ver ranking completo"
+
+msgid "榜单"
+msgstr "Ranking"
+
+msgid "周期"
+msgstr "Período"
+
+msgid "共 %(n)s 人"
+msgid_plural "共 %(n)s 人"
+msgstr[0] "Total de %(n)s pessoa"
+msgstr[1] "Total de %(n)s pessoas"
+
+msgid "这个榜单暂时取不到数据，换个榜单或稍后刷新试试。"
+msgstr "Não foi possível carregar este ranking agora. Tente outro ou atualize mais tarde."
+
+msgid "返回海角首页"
+msgstr "Voltar à página inicial do Haijiao"
+
+# ============ 页脚语言切换 ============
+msgid "语言"
+msgstr "Idioma"
+
+msgid "切换语言"
+msgstr "Mudar idioma"
+
+msgid "切换"
+msgstr "Mudar"
+
+# ============ 卡片说明（阅读 / 评论数） ============
+msgid "%(n)s 阅读"
+msgstr "%(n)s visualizações"
+
+msgid "%(n)s 评论"
+msgstr "%(n)s comentários"
+
+# ============ 需在 App 内使用的拦截文案 ============
+msgid "搜索需在 App 内使用，请下载安装后在 App 内搜索。"
+msgstr "A busca está disponível apenas no app. Baixe e instale para buscar no app."
+
+msgid "登录需在 App 内使用，请下载安装后在 App 内登录。"
+msgstr "O login está disponível apenas no app. Baixe e instale para entrar no app."
+
+msgid "个人中心需在 App 内使用，请下载安装后在 App 内查看。"
+msgstr "A área da conta está disponível apenas no app. Baixe e instale para acessá-la no app."

@@ -51,6 +51,9 @@ MIDDLEWARE = [
     # 放在最前面，让后面中间件（尤其改写 HTML 的友情链接中间件）的产物都被压到。
     'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # 多语言：按 URL 前缀（/pt-br/、/zh-hans/）判定语言，必要时按会话/Accept-Language 协商，
+    # 最后回落到 LANGUAGE_CODE。必须排在 SessionMiddleware 之后、CommonMiddleware 之前。
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -59,7 +62,7 @@ MIDDLEWARE = [
     'Web.middleware.FriendLinkReplaceMiddleware', # 外链随机替换为小影 API 友情链接（FRIEND_LINK_REPLACE=on 时生效）
 ]
 
-ROOT_URLCONF = 'XiaoYingMovie.urls' # 此处应该成您的项目名
+ROOT_URLCONF = 'Prazer.urls' # 此处应该成您的项目名
 
 TEMPLATES = [
     {
@@ -74,12 +77,14 @@ TEMPLATES = [
                 'Web.services.site_info.site_info', # 站点名称/联系方式（取自 .env，改名只改 .env）
                 'Web.services.movie_nav.nav_categories', # 页头分类导航（小影电影分类接口，带缓存）
                 'Web.services.friend_links.friend_links', # 小影 API 友情链接（后端拉取+1小时缓存，渲染进 HTML 供搜索引擎可见）
+                'Web.services.haijiao_auth.header_context', # 页头登录态（海角账号，未登录为 None）
+                'Web.services.i18n_meta.language_alternates', # 页面 hreflang 备选地址（多语言）
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'XiaoYingMovie.wsgi.application' # 此处应该成您的项目名
+WSGI_APPLICATION = 'Prazer.wsgi.application' # 此处应该成您的项目名
 
 
 # Database
@@ -116,8 +121,15 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'zh-hans' # 中文简体
-
+# 多语言：站点默认葡语（面向巴西），中文可切换。
+# 两种语言都带 URL 前缀（/pt-br/、/zh-hans/），根路径 / 会 302 到当前语言版本。
+LANGUAGE_CODE = 'pt-br'
+LANGUAGES = [
+    ('pt-br', 'Português (Brasil)'),
+    ('zh-hans', '简体中文'),
+]
+# 翻译目录：只放葡语词条（中文用 msgid 原文回退，不必单独建目录）
+LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Asia/Shanghai' # 上海时间
 
 USE_I18N = True # 开启国际化
@@ -130,7 +142,7 @@ USE_TZ = True # 开启时区支持
 
 STATIC_URL = '/static/'
 # 静态源目录：全站静态资源都放这里（output.css / js / images）。
-# 开发与生产都直接从该目录对外服务，不走 collectstatic（见 XiaoYingMovie/urls.py 的两条分支）。
+# 开发与生产都直接从该目录对外服务，不走 collectstatic（见 Prazer/urls.py 的两条分支）。
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'Web', 'static')]
 # collectstatic 的收集目标：刻意与源目录分开，否则"收集"就是把文件复制到自己身上
 # （Django 也会直接报 staticfiles.E002）。本项目不依赖 collectstatic，保留它是为了
@@ -150,9 +162,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ============ 站点品牌与联系方式（二开改名只需改 .env） ============
 # 站点主名称：用于 logo、SEO 标题、结构化数据等全站展示
-SITE_NAME = os.getenv('SITE_NAME', '小影影视')
+SITE_NAME = os.getenv('SITE_NAME', 'Prazer')
 # 站点副名称：与主名称并列出现在 SEO 文案中（留空则模板只用主名称）
-SITE_NAME_ALT = os.getenv('SITE_NAME_ALT', '小影电影')
+SITE_NAME_ALT = os.getenv('SITE_NAME_ALT', '快感')
 # SEO 描述里的品牌组合短语：优先取 .env 的 SITE_BRAND，未配置时自动按「副名（主名）」拼接
 SITE_BRAND = os.getenv('SITE_BRAND') or (f'{SITE_NAME_ALT}（{SITE_NAME}）' if SITE_NAME_ALT else SITE_NAME)
 # 页脚免责声明的联系邮箱（写 # 代替 @ 可防爬虫，展示时说明即可）
@@ -160,6 +172,14 @@ SITE_CONTACT_EMAIL = os.getenv('SITE_CONTACT_EMAIL', 'contact#example.com')
 # 联系方式（页脚「联系我们」弹窗用）
 SITE_CONTACT_WECHAT = os.getenv('SITE_CONTACT_WECHAT', '')
 SITE_CONTACT_TG = os.getenv('SITE_CONTACT_TG', '')
+
+
+# ============ App 下载地址（全站唯一的下载入口）============
+# 所有平台（Windows / macOS / Linux / Android / iOS / 平板）的下载按钮都指向本地路由
+# /download，它再 302 到这里配置的地址 —— 改下载地址只改 .env 这一处（DOWNLOAD_URL）。
+# 为什么不直接在页面上写外链：中间件会把非本站域名的 <a> 随机替换成友情链接，
+# 直连外链会被改坏（与 /feedback 同理）。
+DOWNLOAD_URL = os.getenv('DOWNLOAD_URL', 'https://example.com/download')
 
 
 # ============ 问题反馈中心（小影统一反馈系统，子项目零代码接入）============

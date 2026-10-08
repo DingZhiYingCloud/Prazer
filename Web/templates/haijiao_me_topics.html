@@ -11,8 +11,6 @@
 {% endcomment %}
 <section class="mx-auto w-full max-w-7xl px-4 py-6">
     {% include 'common_html/breadcrumbs.html' %}
-    {% include 'common_html/haijiao_user_bar.html' %}
-
     <h1 class="mt-4 flex items-center gap-2 text-2xl font-bold sm:text-3xl">
         {% include 'common_html/haijiao_icon.html' with name='file' class='h-6 w-6 shrink-0 opacity-70' %}
         我的帖子
@@ -35,7 +33,7 @@
         但不会被误点，也没有悬停反馈）。
         {% endcomment %}
         <li>
-            <a {% if row.topic_id %}href="/haijiao/topic/{{ row.topic_id }}.html"{% endif %}
+            <a {% if row.topic_id %}href="{% url 'haijiao_topic' row.topic_id %}"{% endif %}
                 class="group block rounded-box border border-base-300 bg-base-100 p-3 transition
                     {% if row.topic_id %}hover:border-primary/40 hover:bg-base-200/60{% endif %}">
                 <div class="flex flex-wrap items-start justify-between gap-2">
@@ -87,7 +85,7 @@
         <p class="text-sm text-base-content/60">
             {% if status == 'published' %}还没有审核通过的帖子。{% elif status == 'pending' %}没有正在审核的帖子。{% else %}没有被拒的帖子。{% endif %}
         </p>
-        <a href="/haijiao/list.html" class="link link-hover text-sm text-primary">去海角社区逛逛</a>
+        <a href="{% url 'haijiao_index' %}" class="link link-hover text-sm text-primary">去海角社区逛逛</a>
     </div>
     {% endif %}
 </section>

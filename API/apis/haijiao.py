@@ -57,6 +57,7 @@ import os
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from django.utils.translation import gettext_lazy as _lazy
 
 from API.apis.movie import clean_payload
 from API.common.signature import (API_BASE, REQUEST_TIMEOUT, USER_AGENT,
@@ -109,10 +110,11 @@ def _cached_data(key, ttl, path, params=None, timeout=REQUEST_TIMEOUT):
 
 
 # 内容列表栏目（接口允许的取值，非法返回 PARAM_VALUE_INVALID）
+# 展示文案用 gettext_lazy：模块导入时还不能确定语言，真正的翻译在渲染时按当前语言求值。
 TABS = ('hot', 'news', 'events', 'original', 'essence', 'latest')
 TAB_LABELS = {
-    'hot': '热帖', 'news': '新闻', 'events': '大事记',
-    'original': '原创', 'essence': '精华', 'latest': '最新',
+    'hot': _lazy('热帖'), 'news': _lazy('新闻'), 'events': _lazy('大事记'),
+    'original': _lazy('原创'), 'essence': _lazy('精华'), 'latest': _lazy('最新'),
 }
 
 
@@ -240,9 +242,9 @@ def get_video_m3u8(topic_id, attachment_id):
 
 # 榜单维度与周期（接口约定取值，非法值返回 20003）
 RANK_BOARDS = ('fans', 'liked', 'wealth')
-RANK_BOARD_LABELS = {'fans': '粉丝榜', 'liked': '点赞榜', 'wealth': '人气榜'}
+RANK_BOARD_LABELS = {'fans': _lazy('粉丝榜'), 'liked': _lazy('点赞榜'), 'wealth': _lazy('人气榜')}
 RANK_PERIODS = ('all', 'month', 'week')
-RANK_PERIOD_LABELS = {'all': '总榜', 'month': '月榜', 'week': '周榜'}
+RANK_PERIOD_LABELS = {'all': _lazy('总榜'), 'month': _lazy('月榜'), 'week': _lazy('周榜')}
 
 
 def get_ranking(board='fans', period='all'):

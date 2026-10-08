@@ -8,12 +8,13 @@ import logging
 import re
 from urllib.parse import quote
 
+from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.html import escape
 
-from API.apis import drama, movie
+from API.apis import drama, haijiao, movie
 from Web.services import pager
 from Web.views.pic import pic_url
 
@@ -643,12 +644,26 @@ def error_500(request, exception=None):
     return render(request, '500.html', status=500)
 
 
+# ============ App 下载（全站唯一的下载入口） ============
+def app_download(request):
+    """统一下载入口：302 跳到 .env 的 DOWNLOAD_URL
+
+    页头「下载 App」与帖子卡片下载框里的所有平台按钮都指向这里。
+    走本地路由是为了绕开「外链随机替换」中间件 —— 它会改写非本站域名的 <a>，
+    直连外链会被换成友情链接（与 /feedback 同理）。
+    """
+    return redirect(settings.DOWNLOAD_URL)
+
+
 # ============ Sitemap（站点地图） ============
 # 只放**当前确实可被收录**的页面（sitemap 里出现 noindex 页面是搜索引擎明确不建议的），
-# 每一项的收录条件都与页面模板的 robots 判定保持同一份数据源：
-#   首页            首页聚合两个区块任一非空才列（模板判的是 carousel/blocks）
-#   分类列表页      分类接口返回的主分类（模板判的是 items，空数据页模板设 noindex）
-#   影片详情页      首页与各分类第 1 页里出现的影片（这些页面确定有内容）
+# 每一项的收录条件都与页面模板的 robots 判定保持同一份数据源。
+# 本站现只上线海角社区频道，故仅收录海角社区的页面：
+#   首页 /          「热帖」第 1 页（= 海角频道首页）
+#   栏目首页         6 大栏目各自的第 1 页
+#   排行榜           /haijiao/ranking.html
+# 帖子详情页不收录：本站内容需在 App 内观看，详情页只给出下载指引并设 noindex。
+# 页面路由都带语言前缀，所以每个路径会按 LANGUAGES 展开成多语言地址（配合各页的 hreflang）。
 # 内容来自实时抓取，本地没有可信时间戳，因此不写 lastmod（宁缺勿假）。
 # 生成的**路径**列表缓存 6 小时；绝对地址在每次响应时按当前请求域名拼，换域名不会留下死链。
 SITEMAP_CACHE_KEY = 'xyapi:sitemap_urls'
@@ -665,29 +680,22 @@ def _build_sitemap_urls():
             seen.add(path)
             urls.append((path, freq, priority))
 
-    home = movie.get_home() or {}
-    if (home.get('carousel') or []) or (home.get('blocks') or []):
-        add('/', 'daily', '1.0')
+    def add_all_languages(path, freq, priority):
+        """同一页面按语言前缀展开（/pt-br/… 与 /zh-hans/…）"""
+        for code, _name in settings.LANGUAGES:
+            add(f'/{code}{path}', freq, priority)
 
-    # 详情页来源：首页轮播 + 首页各区块 + 各分类第 1 页
-    videos = list(home.get('carousel') or [])
-    for block in home.get('blocks') or []:
-        videos.extend(block.get('items') or [])
-
-    categories = (movie.get_categories() or {}).get('main') or []
-    for category in categories:
-        type_id = category.get('id')
-        add(f'/list/{type_id}.html', 'daily', '0.8')
-        videos.extend(((movie.get_list(type_id, page=1) or {}).get('items')) or [])
-
-    for video in videos:
-        if video.get('id'):
-            add(f'/detail/{video["id"]}.html', 'weekly', '0.6')
+    add_all_languages('/', 'daily', '1.0')
+    for tab in haijiao.TABS:
+        # 热帖第 1 页就是首页 /，不重复收录
+        if tab != 'hot':
+            add_all_languages(f'/haijiao/list/{tab}.html', 'daily', '0.8')
+    add_all_languages('/haijiao/ranking.html', 'weekly', '0.6')
     return urls
 
 
 def sitemap(request):
-    """sitemap.xml：首页 + 分类页 + 详情页，路径列表缓存 6 小时
+    """sitemap.xml：首页 + 栏目页 + 排行榜，路径列表缓存 6 小时
 
     单文件 sitemap 上限 5 万条 URL / 50 MB（未压缩），本站收录量远低于上限。
     """

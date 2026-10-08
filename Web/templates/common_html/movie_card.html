@@ -1,8 +1,7 @@
-{% load xy_pic %}
-{# 影片卡片：分类列表页 / 搜索结果页共用（首页区块用的是 common_html/cards/ 下的样式） #}
+{% load xy_pic i18n %}
+{# 影片/帖子卡片：分类列表页 / 搜索结果页 / 个人中心共用（首页区块用的是 common_html/cards/ 下的样式） #}
 {# 用法：{% include 'common_html/movie_card.html' with item=item %} #}
-{# 短剧专区复用本卡片，用 detail_base 把详情地址换成 /drama/detail（见 drama_list.html） #}
-{# 图片走本站代理（{% pic %} 标签），第三方站点的防盗链/限速/连不上都不会直接砸到访客 #}
+{# 本站现只有海角社区一个频道，卡片统一指向帖子详情；链接走 {% url %} 以带上语言前缀。 #}
 {# data-hl：搜索页会用 common.js 把片名里的关键词高亮（没有关键词时是空操作） #}
 {% comment %}
 用户明确要求：卡片本身不做任何悬停动效（不上浮、不缩放、不加阴影），
@@ -14,7 +13,9 @@
 show_stats：海角个人中心的卡片传 True，把文字版说明换成「图标 + 数字」的互动数据
 （item.stats 由 Web/services/haijiao_cards.py 提供）。不传时行为完全不变。
 {% endcomment %}
-<a href="{{ detail_base|default:'/detail' }}/{{ item.id }}.html"
+{# data-app-download：点卡片不跳详情（详情需 App 内观看），改弹下载弹窗（见 common.js） #}
+{% url 'haijiao_topic' item.id as card_url %}
+<a href="{{ card_url }}" data-app-download
     class="card block overflow-hidden border border-base-300 bg-base-100"
     title="{{ item.name }}">
     <figure class="relative aspect-[3/4] overflow-hidden bg-base-200">
@@ -25,7 +26,7 @@ show_stats：海角个人中心的卡片传 True，把文字版说明换成「�
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6" aria-hidden="true">
                 <path d="m5 3 14 9-14 9V3z" />
             </svg>
-            <span class="text-xs font-medium">查看详情</span>
+            <span class="text-xs font-medium">{% trans '查看详情' %}</span>
         </span>
     </figure>
     <div class="p-2">

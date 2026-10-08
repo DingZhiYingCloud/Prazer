@@ -9,8 +9,6 @@
 {% endcomment %}
 <section class="mx-auto w-full max-w-7xl px-4 py-6">
     {% include 'common_html/breadcrumbs.html' %}
-    {% include 'common_html/haijiao_user_bar.html' %}
-
     <h1 class="mt-4 flex items-center gap-2 text-2xl font-bold sm:text-3xl">
         {% include 'common_html/haijiao_icon.html' with name='heart' class='h-6 w-6 shrink-0 opacity-70' %}
         我点赞的
@@ -28,7 +26,7 @@
     <div class="mt-6 flex flex-col items-center gap-2 rounded-box border border-dashed border-base-300 py-10 text-center">
         {% include 'common_html/haijiao_icon.html' with name='heart' class='h-8 w-8 opacity-30' %}
         <p class="text-sm text-base-content/60">还没有点赞过的帖子。</p>
-        <a href="/haijiao/list.html" class="link link-hover text-sm text-primary">去海角社区逛逛</a>
+        <a href="{% url 'haijiao_index' %}" class="link link-hover text-sm text-primary">去海角社区逛逛</a>
     </div>
     {% endif %}
 </section>

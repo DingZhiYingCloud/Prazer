@@ -23,6 +23,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 from API.apis import haijiao
 from Web.services import haijiao_auth, haijiao_cards, haijiao_media, pager
@@ -85,8 +86,8 @@ def _with_details(items):
 def _breadcrumbs(*trail):
     """个人中心统一的导航层级：首页 / 海角社区 / 个人中心 / …"""
     items = [
-        {'label': '首页', 'href': '/'},
-        {'label': '海角社区', 'href': '/haijiao/list.html'},
+        {'label': '首页', 'href': reverse('home')},
+        {'label': '海角社区', 'href': reverse('haijiao_index')},
     ]
     items += [{'label': label, 'href': href} if href else {'label': label}
               for label, href in trail]
@@ -100,13 +101,13 @@ def _me_context(request, active):
         'account_info': None,
         'me_nav': active,
         'me_links': [
-            {'key': 'home', 'label': '个人中心', 'icon': 'user', 'href': '/haijiao/me.html'},
-            {'key': 'topics', 'label': '我的帖子', 'icon': 'file', 'href': '/haijiao/me/topics.html'},
-            {'key': 'liked', 'label': '我点赞的', 'icon': 'heart', 'href': '/haijiao/me/liked.html'},
-            {'key': 'favorites', 'label': '我的收藏', 'icon': 'bookmark', 'href': '/haijiao/me/favorites.html'},
-            {'key': 'following', 'label': '我关注的人', 'icon': 'user-plus', 'href': '/haijiao/me/following.html'},
-            {'key': 'fans', 'label': '我的粉丝', 'icon': 'users', 'href': '/haijiao/me/fans.html'},
-            {'key': 'wealth', 'label': '金币流水', 'icon': 'chart', 'href': '/haijiao/me/wealth.html'},
+            {'key': 'home', 'label': '个人中心', 'icon': 'user', 'href': reverse('haijiao_me')},
+            {'key': 'topics', 'label': '我的帖子', 'icon': 'file', 'href': reverse('haijiao_me_topics')},
+            {'key': 'liked', 'label': '我点赞的', 'icon': 'heart', 'href': reverse('haijiao_me_liked')},
+            {'key': 'favorites', 'label': '我的收藏', 'icon': 'bookmark', 'href': reverse('haijiao_me_favorites')},
+            {'key': 'following', 'label': '我关注的人', 'icon': 'user-plus', 'href': reverse('haijiao_me_following')},
+            {'key': 'fans', 'label': '我的粉丝', 'icon': 'users', 'href': reverse('haijiao_me_fans')},
+            {'key': 'wealth', 'label': '金币流水', 'icon': 'chart', 'href': reverse('haijiao_me_wealth')},
         ],
     }
 
@@ -132,13 +133,13 @@ def haijiao_register(request):
     POST 提交注册；成功后直接登录，并把凭据一次性展示出来让访客保存
     """
     if haijiao_auth.current(request) is not None:
-        return redirect('/haijiao/me.html')
+        return redirect(reverse('haijiao_me'))
 
     # 注册成功后的回显（凭据只在这一步短暂存在会话里，渲染完立即删除）
     if request.GET.get('done') == '1':
         creds = request.session.pop('hj_new_creds', None)
         if not creds:
-            return redirect('/haijiao/me.html')
+            return redirect(reverse('haijiao_me'))
         return render(request, 'haijiao_register.html', {
             'done': True,
             'creds': creds,
@@ -168,7 +169,7 @@ def haijiao_register(request):
                     'username': username, 'password': password, 'email': email,
                     'nickname': data.get('nickname') or '',
                 }
-                return redirect('/haijiao/register.html?done=1')
+                return redirect(reverse('haijiao_register') + '?done=1')
             error = msg or '注册失败，请重试'
             # 验证码一次性：无论成败都作废，失败后必须换一张新的
             creds = {'username': username, 'password': password, 'email': email}
@@ -228,7 +229,7 @@ def haijiao_login(request):
 def haijiao_logout(request):
     """退出登录：只清掉本会话里的海角账号，站点其它功能不受影响"""
     haijiao_auth.logout(request)
-    return redirect('/haijiao/list.html')
+    return redirect(reverse('haijiao_index'))
 
 
 # ============ 个人中心 ============
@@ -281,7 +282,8 @@ def haijiao_me_topics(request):
 
     def page_url(target):
         target = min(max(1, int(target)), total_pages)
-        return f'/haijiao/me/topics.html?status={status}' + ('' if target == 1 else f'&page={target}')
+        return (reverse('haijiao_me_topics') + f'?status={status}'
+                + ('' if target == 1 else f'&page={target}'))
 
     context = _me_context(request, 'topics')
     context.update({
@@ -289,13 +291,13 @@ def haijiao_me_topics(request):
         'status_label': dict(TOPIC_STATUSES)[status],
         'status_icon': STATUS_ICONS[status],
         'status_links': [{'slug': slug, 'label': label, 'active': slug == status,
-                          'href': f'/haijiao/me/topics.html?status={slug}'}
+                          'href': reverse('haijiao_me_topics') + f'?status={slug}'}
                          for slug, label in TOPIC_STATUSES],
         'rows': rows,
         'page': page,
         'total_pages': total_pages,
         'pagination': {'links': pager.build(page, total_pages, page_url)},
-        'breadcrumbs': _breadcrumbs(('个人中心', '/haijiao/me.html'), ('我的帖子', None)),
+        'breadcrumbs': _breadcrumbs(('个人中心', reverse('haijiao_me')), ('我的帖子', None)),
     })
     return render(request, 'haijiao_me_topics.html', context)
 
@@ -312,7 +314,7 @@ def haijiao_me_liked(request):
 
     def page_url(target):
         target = min(max(1, int(target)), total_pages)
-        return '/haijiao/me/liked.html' + ('' if target == 1 else f'?page={target}')
+        return reverse('haijiao_me_liked') + ('' if target == 1 else f'?page={target}')
 
     context = _me_context(request, 'liked')
     context.update({
@@ -320,7 +322,7 @@ def haijiao_me_liked(request):
         'page': page,
         'total_pages': total_pages,
         'pagination': {'links': pager.build(page, total_pages, page_url)},
-        'breadcrumbs': _breadcrumbs(('个人中心', '/haijiao/me.html'), ('我点赞的', None)),
+        'breadcrumbs': _breadcrumbs(('个人中心', reverse('haijiao_me')), ('我点赞的', None)),
     })
     return render(request, 'haijiao_me_liked.html', context)
 
@@ -351,7 +353,7 @@ def haijiao_me_favorites(request):
 
     # 收藏夹筛选：第一个固定是「全部收藏」（不带 folder_id 参数，地址最干净）
     folder_links = [{'id': '0', 'name': '全部收藏', 'count': None,
-                     'active': folder_id == '0', 'href': '/haijiao/me/favorites.html'}]
+                     'active': folder_id == '0', 'href': reverse('haijiao_me_favorites')}]
     for folder in folders.get('results') or []:
         fid = str(folder.get('folder_id'))
         folder_links.append({
@@ -359,7 +361,7 @@ def haijiao_me_favorites(request):
             'name': folder.get('name') or f'收藏夹 {fid}',
             'count': folder.get('count'),
             'active': fid == folder_id,
-            'href': f'/haijiao/me/favorites.html?folder_id={fid}',
+            'href': reverse('haijiao_me_favorites') + f'?folder_id={fid}',
         })
 
     def page_url(target):
@@ -369,7 +371,7 @@ def haijiao_me_favorites(request):
             params.append(f'page={target}')
         if folder_id != '0':
             params.append(f'folder_id={folder_id}')
-        return '/haijiao/me/favorites.html' + (f'?{"&".join(params)}' if params else '')
+        return reverse('haijiao_me_favorites') + (f'?{"&".join(params)}' if params else '')
 
     context = _me_context(request, 'favorites')
     context.update({
@@ -383,7 +385,7 @@ def haijiao_me_favorites(request):
         'page': page,
         'total_pages': total_pages,
         'pagination': {'links': pager.build(page, total_pages, page_url)},
-        'breadcrumbs': _breadcrumbs(('个人中心', '/haijiao/me.html'), ('我的收藏', None)),
+        'breadcrumbs': _breadcrumbs(('个人中心', reverse('haijiao_me')), ('我的收藏', None)),
     })
     return render(request, 'haijiao_me_favorites.html', context)
 
@@ -398,7 +400,7 @@ def haijiao_me_following(request):
     context.update({
         'rows': rows,
         'total': data.get('total') or len(rows),
-        'breadcrumbs': _breadcrumbs(('个人中心', '/haijiao/me.html'), ('我关注的人', None)),
+        'breadcrumbs': _breadcrumbs(('个人中心', reverse('haijiao_me')), ('我关注的人', None)),
     })
     return render(request, 'haijiao_me_following.html', context)
 
@@ -415,7 +417,7 @@ def haijiao_me_fans(request):
 
     def page_url(target):
         target = min(max(1, int(target)), total_pages)
-        return '/haijiao/me/fans.html' + ('' if target == 1 else f'?page={target}')
+        return reverse('haijiao_me_fans') + ('' if target == 1 else f'?page={target}')
 
     context = _me_context(request, 'fans')
     context.update({
@@ -423,7 +425,7 @@ def haijiao_me_fans(request):
         'page': page,
         'total_pages': total_pages,
         'pagination': {'links': pager.build(page, total_pages, page_url)},
-        'breadcrumbs': _breadcrumbs(('个人中心', '/haijiao/me.html'), ('我的粉丝', None)),
+        'breadcrumbs': _breadcrumbs(('个人中心', reverse('haijiao_me')), ('我的粉丝', None)),
     })
     return render(request, 'haijiao_me_fans.html', context)
 
@@ -453,18 +455,19 @@ def haijiao_me_wealth(request):
 
     def page_url(target):
         target = min(max(1, int(target)), total_pages)
-        return f'/haijiao/me/wealth.html?kind={kind}' + ('' if target == 1 else f'&page={target}')
+        return (reverse('haijiao_me_wealth') + f'?kind={kind}'
+                + ('' if target == 1 else f'&page={target}'))
 
     context = _me_context(request, 'wealth')
     context.update({
         'kind': kind,
         'kind_links': [{'slug': slug, 'label': label, 'active': slug == kind,
-                        'href': f'/haijiao/me/wealth.html?kind={slug}'}
+                        'href': reverse('haijiao_me_wealth') + f'?kind={slug}'}
                        for slug, label in WEALTH_KINDS],
         'rows': rows,
         'page': page,
         'total_pages': total_pages,
         'pagination': {'links': pager.build(page, total_pages, page_url)},
-        'breadcrumbs': _breadcrumbs(('个人中心', '/haijiao/me.html'), ('金币流水', None)),
+        'breadcrumbs': _breadcrumbs(('个人中心', reverse('haijiao_me')), ('金币流水', None)),
     })
     return render(request, 'haijiao_me_wealth.html', context)

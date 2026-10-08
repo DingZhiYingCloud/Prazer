@@ -16,7 +16,7 @@
     <h1 class="mt-4 text-xl font-bold">视频暂时不可用</h1>
     <p class="mt-2 text-sm opacity-70">{% if error %}{{ error }}{% else %}该视频取不到，请稍后再试。{% endif %}</p>
     <div class="mt-6">
-        <a href="/haijiao/topic/{{ topic_id }}.html" class="btn btn-primary btn-sm">返回帖子详情</a>
+        <a href="{% url 'haijiao_topic' topic_id %}" class="btn btn-primary btn-sm">返回帖子详情</a>
     </div>
 </section>
 {% endblock %}

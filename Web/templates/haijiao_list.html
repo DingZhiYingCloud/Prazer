@@ -1,53 +1,30 @@
 {% extends 'template.html' %}
+{% load i18n %}
 
-{% block title %}{{ type_name }}{% if page > 1 %} - 第 {{ page }} 页{% endif %} - 海角社区 - {{ SITE_NAME_ALT }}{% endblock %}
-{% block keywords %}海角社区,{{ type_name }},免费社区,在线社区,{{ SITE_NAME }}{% endblock %}
-{% block description %}{{ SITE_BRAND }}海角社区频道，匿名免登录浏览{% endblock %}
-{% block og_title %}{{ type_name }}{% if page > 1 %} - 第 {{ page }} 页{% endif %}{% endblock %}
+{% block title %}{{ type_name }}{% if page > 1 %} - {% blocktrans %}第 {{ page }} 页{% endblocktrans %}{% endif %} - {{ SITE_NAME_ALT }}{% endblock %}
+{% block keywords %}{% trans '海角社区' %},{{ type_name }},{% trans '免费社区' %},{% trans '在线社区' %},{{ SITE_NAME }}{% endblock %}
+{% block description %}{% blocktrans trimmed %}{{ SITE_BRAND }}海角社区频道，匿名免登录浏览{% endblocktrans %}{% endblock %}
+{% block og_title %}{{ type_name }}{% if page > 1 %} - {% blocktrans %}第 {{ page }} 页{% endblocktrans %}{% endif %}{% endblock %}
 {# 空数据页（接口异常）不收录 #}
 {% block robots %}{% if empty %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
 
 {% block content %}
 {% comment %}
-海角列表：6 个 tab（hot/news/events/original/essence/latest）切换栏目，
-分页每页 20 条。tab 切换和分页都走普通链接，不依赖 JS。
-
-筛选条吸顶：与 drama_list 一致（sticky 顶部 + 背景半透明），让长列表
-翻页时栏目切换不消失。
+海角列表：栏目切换与搜索都收进了全站页头（见 common_html/headers.html），
+本页只渲染面包屑、标题、卡片与分页（每页 20 条）。
 {% endcomment %}
 <section class="mx-auto w-full max-w-7xl px-4 py-6">
     {% include 'common_html/breadcrumbs.html' %}
-    {% include 'common_html/haijiao_user_bar.html' %}
 
     <div class="mt-2 flex flex-wrap items-end justify-between gap-2">
         <h1 class="text-2xl font-bold sm:text-3xl">{{ type_name }}</h1>
-        <span class="text-sm opacity-60">共 {{ total_pages }} 页</span>
-    </div>
-
-    {# 频道内搜索：只搜海角社区这条线路（见 common_html/haijiao_search_box.html） #}
-    {% include 'common_html/haijiao_search_box.html' %}
-
-    <div class="xy-filter-bar sticky top-[calc(4rem+1px)] z-20 -mx-4 mt-3 border-b border-base-300 bg-base-100/95 px-4 py-3 backdrop-blur">
-        <div class="xy-filter-group">
-            <span class="xy-filter-label">栏目</span>
-            <div class="xy-filter-options">
-                {% for slug, label in tab_options %}
-                {% comment %}
-                tab 切换 URL：hot 第 1 页 = 首页地址；其余栏目第 1 页 = 不带页码；
-                第 N 页都带页码。当前 tab 不再生成链接（active）。
-                {% endcomment %}
-                <a href="{% if slug == 'hot' and page == 1 %}/haijiao/list.html{% elif page == 1 %}/haijiao/list/{{ slug }}.html{% else %}/haijiao/list/{{ slug }}/{{ page }}.html{% endif %}"
-                    class="xy-filter-pill {% if slug == tab %}is-active{% endif %}"
-                    {% if slug == tab %}aria-current="true"{% endif %}>{{ label }}</a>
-                {% endfor %}
-            </div>
-        </div>
+        <span class="text-sm opacity-60">{% blocktrans count n=total_pages %}共 {{ n }} 页{% plural %}共 {{ n }} 页{% endblocktrans %}</span>
     </div>
 
     {% if items %}
     <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {% for item in items %}
-        {% include 'common_html/movie_card.html' with item=item detail_base='/haijiao/topic' %}
+        {% include 'common_html/movie_card.html' with item=item %}
         {% endfor %}
     </div>
     {% include 'common_html/pager.html' %}
@@ -59,8 +36,8 @@
             <rect x="2" y="4" width="20" height="16" rx="3" />
             <path d="M7 4v16M17 4v16" />
         </svg>
-        <p class="text-sm opacity-60">这个栏目暂时取不到内容，稍后刷新试试。</p>
-        <a href="/haijiao/list.html" class="btn btn-primary btn-sm">回到海角首页</a>
+        <p class="text-sm opacity-60">{% trans '这个栏目暂时取不到内容，稍后刷新试试。' %}</p>
+        <a href="{% url 'haijiao_index' %}" class="btn btn-primary btn-sm">{% trans '回到海角首页' %}</a>
     </div>
     {% endif %}
 
